@@ -94,7 +94,7 @@ float simulator(){
 
 
 
-float PI_func(){
+void PI_func(){
   //In order to get the best Kp and Ki, we did Ziegler-Nichols Method to have a reference, and then we adjusted empirically.
   //We tried to have a smooth response (without overshoot)and that stabilizes to desired value as fast as possible
   int Kp = 25;
@@ -118,10 +118,10 @@ float PI_func(){
   if (windup_flag)
     antiWindup(u);
 
+  writeLED(u);
+
   old_i = i;
   old_error = error;
-
-  return  u;
 }
 
 

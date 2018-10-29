@@ -49,8 +49,7 @@ void loop() {
     
     y = y * VCC / (1023.0);
 
-    float controller_output = PI_func();
-    writeLED(controller_output);
+    PI_func();
 
     flag_timer = 0;
   }
