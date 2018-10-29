@@ -1,27 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-
-#define OCCUPIED 60
-#define UNOCCUPIED 20
-#define FILTER_SAMPLES 20
-#define VCC 5
-
-int switch_pin = 7;
-int prev_switch_value = LOW;
-long switch_debounce = 400;
-long prev_switch_time = 0;
-
-extern bool deadzone_flag;
-extern bool ffw_flag;
-extern bool feedback_flag;
-extern bool windup_flag;
-
-extern float vi;
-extern float vf;
-extern float y;
-
-int desired_lux = OCCUPIED;
-
 //LDR paramethers
 float m = -0.7;
 float b = 1.9252;
@@ -30,6 +6,11 @@ int R1 = 10;
 
 
 
+//switch button control variables
+int switch_pin = 7;
+int prev_switch_value = LOW;
+long switch_debounce = 400;
+long prev_switch_time = 0;
 //check occupation state through a button switch
 int check_switch() {
   int switch_value = digitalRead(switch_pin);

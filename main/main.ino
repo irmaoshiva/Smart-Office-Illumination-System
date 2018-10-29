@@ -4,10 +4,22 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+#define OCCUPIED 60
+#define UNOCCUPIED 20
+#define FILTER_SAMPLES 20
 #define VCC 5
 
-extern bool filter_flag;
-extern int desired_lux;
+int desired_lux = OCCUPIED;
+
+//to check the system with differents actions
+bool deadzone_flag = true;
+bool ffw_flag = true;
+bool feedback_flag = true;
+bool windup_flag = true;
+bool filter_flag = true;
+
+float vi;
+float vf;
 float y;
 
 //timer 0 messes with delay(), mills(), etc

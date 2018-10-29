@@ -1,20 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-
-#define VCC 5
-
-//gainWUp is the gain used in AntiWindup (sum the error multiplied by this gain to the integral term in the next sample).
-//in order to fit the gainWUp, we made several attempt's and we chose the one that was more fast to change the status.
-//One attempt that we did was: put reference to 20Lux and point light (with mobile phone) to LDR. Next, we turn off the mobile phone light,closed the box, and check the response time
-float windup_gain = 1;
-
-//to check the system with differents actions
-bool deadzone_flag = true;
-bool ffw_flag = true;
-bool feedback_flag = true;
-bool windup_flag = true;
-bool filter_flag = true;
-
 float tau;
 float ext_perturb;
 int x_on;
@@ -22,15 +5,15 @@ float pwm_ffw;
 float G0;
 unsigned long t0;
 
-extern float vi;
-extern float vf;
-extern float y;
 
 float error;
 float old_error = 0;
 float old_i = 0;
 float windup_error = 0;
-
+//gainWUp is the gain used in AntiWindup (sum the error multiplied by this gain to the integral term in the next sample).
+//in order to fit the gainWUp, we made several attempt's and we chose the one that was more fast to change the status.
+//One attempt that we did was: put reference to 20Lux and point light (with mobile phone) to LDR. Next, we turn off the mobile phone light,closed the box, and check the response time
+float windup_gain = 1;
 
 //get the gain for feedforward calculus
 int led_pin = 11;
@@ -54,32 +37,32 @@ void feedforward_init() {
 
 
 //returns feedforward input in pwm
-float ffw_func(int desired_lux){
-  return (desired_lux - ext_perturb) / (G0);
+float ffw_func(int _desired_lux){
+  return (_desired_lux - ext_perturb) / (G0);
 }
 
 
 
-void environment_init(int desired_lux){
+void environment_init(int _desired_lux){
   if (ffw_flag) 
-    pwm_ffw = ffw_func(desired_lux);
+    pwm_ffw = ffw_func(_desired_lux);
   else 
     pwm_ffw = 0.0;
   
   //--- It is extremely important to refere that achieving tau, we did an experimental function (time/tau in function of desired lux)
-  getTau(desired_lux);
-  vf = convert_Lux_to_Volt(desired_lux);
+  getTau(_desired_lux);
+  vf = convert_Lux_to_Volt(_desired_lux);
   t0 = micros();
 }
 
 
 
 //--- It is extremely important to refere that o achieve tau, we did a experimental function (time/tau in function of desired lux)
-void getTau(int desired_lux){
-  if (desired_lux > x_on)
-    desired_lux = x_on;
+void getTau(int _desired_lux){
+  if (_desired_lux > x_on)
+    _desired_lux = x_on;
 
-  tau = ( 1000 * ((float)( (float)0.0018 * pow(desired_lux, 2) - (float)(0.3715 * desired_lux) + 36.6262 )) );
+  tau = ( 1000 * ((float)( (float)0.0018 * pow(_desired_lux, 2) - (float)(0.3715 * _desired_lux) + 36.6262 )) );
 }
 
 
