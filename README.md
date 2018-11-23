@@ -10,3 +10,4 @@ CONSENSUS:
 
 meter os inteiros em uint_8;
 
+Pôr destructors nas classes (pelo menos perguntar ao prof se não é preciso);
