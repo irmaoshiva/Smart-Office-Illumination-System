@@ -11,3 +11,9 @@ CONSENSUS:
 meter os inteiros em uint_8;
 
 Pôr destructors nas classes (pelo menos perguntar ao prof se não é preciso);
+
+[DIZER CASOS QUE ESTIVEMOS A TESTAR ]:
+->CALIBRAÇÃO:
+Dizer que metemos os 2 a correr ao mm tempo;
+Dizer que metemos um de cada vez;
+Dizer que metemos 1º o 1, e depois o 2, e vice-versa;
