@@ -3,6 +3,7 @@ Real-Time Cooperative Decentralized Control of a Smart Office Illumination Syste
 
 Dúvidas:
 Se o 1 bazar (como nos estamos a fazer no start calibration que so começa se for o gajo nº 1)
+- Imagina que recebo uma mensagem de hello a meio do resto do codigo, eu nao quero correr mais nada do resto do codigo quero ir logo para o check_flags como é que eu garanto que isso acontece?
 
 CONSENSUS:
 ->iluminaçao a mais do que o sistema nao consegue dar! quero 5000 lux! ele calcula todas e nenhuma é fazivel, temos de decidir o que fazer nesse caso. programar isso;
