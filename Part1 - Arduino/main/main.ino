@@ -1,79 +1,24 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include "controller.h"
+
 //Include lybrary's for interrupts
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
-#define OCCUPIED 60
-#define UNOCCUPIED 20
-#define FILTER_SAMPLES 20
-#define VCC 5
-
-int desired_lux = OCCUPIED;
-
-//to check the system with differents actions
-bool deadzone_flag = true;
-bool ffw_flag = true;
-bool feedback_flag = true;
-bool windup_flag = true;
-bool filter_flag = true;
-
-float vi;
-float vf;
-float y;
 
 //timer 0 messes with delay(), mills(), etc
 //timer 1 is used for the sampling period
 //Use in timer 2.
 const byte mask = B11111000;
 int prescale_pwm = 1;
-volatile bool flag_timer = 0;
+volatile bool flag_timer = false;
 
+//CONTROLLER cont(-0.7, 1.9252, true, true, true, true, true);
 
-void setup() {
-  Serial.begin(2000000);
-  
-  TCCR2B = (TCCR2B & mask) | prescale_pwm;
-  
-  feedforward_init();
-  environment_init(desired_lux);
-  
-  Active_InterruptSample();
-}
+CONTROLLER cont;
 
-
-
-void loop() {
-  
-  get_flags();
-  check_switch();
-
-  //only when the interrupt is finished
-  // the control has more or less 2/3 ms (we print the time to ensure this important thing)
-  if (flag_timer) {
-    
-    if (filter_flag)
-      y = LPfilter(A0);
-    else
-      y = analogRead(A0);
-
-    print_actual_state();
-    
-    y = y * VCC / (1023.0);
-
-    PI_func();
-
-    flag_timer = 0;
-  }
-}
-
-
-
-//------------------------------ INTERRUPT CODE ------------------------------
 //------Interrupt used to generate 100Hz sample frequency-------
 //---- We chosed timer 1 because this have 16 bits!
-void Active_InterruptSample(){
-  
+void Active_InterruptSample() {
+
   cli(); //stop interrupts
   TCCR1A = 0;// clear register
   TCCR1B = 0;// clear register
@@ -83,7 +28,7 @@ void Active_InterruptSample(){
   //We have reached the value through the account: OCR1A= 16E6/(prescale*100) [100 is the desired value to the frequency]
   OCR1A = 20000; //must be <65536
   //=16*10^6/(100*8) , 8= prescale!
-  
+
   TCCR1B |= (1 << WGM12); //CTC On
 
   //-------------------------
@@ -94,7 +39,7 @@ void Active_InterruptSample(){
   TCCR1B |= (1 << CS11);
   TCCR1B &= ~(1 << CS10);
   //-------------------------
-  
+
   // enable timer compare interrupt
   TIMSK1 |= (1 << OCIE1A);
   sei(); //allow interrupts
@@ -103,5 +48,37 @@ void Active_InterruptSample(){
 //the interrupt has to be as small as possible
 //and we have to ensure that the loop control has to have less than 10 ms
 ISR(TIMER1_COMPA_vect) {
-  flag_timer = 1; //notify main loop
+  flag_timer = true; //notify main loop
+}
+
+
+void setup() {
+  Serial.begin(2000000);
+
+  cont.initialize(-0.7, 1.9252, true, true, true, true, true);
+
+  TCCR2B = (TCCR2B & mask) | prescale_pwm;
+
+  cont.feedforward_init();
+
+  cont.environment_init(UNOCCUPIED);
+
+  Active_InterruptSample();
+}
+
+void loop() {
+
+  cont.get_flags();
+  cont.check_switch();
+
+  //Serial.println("EU VIM AQUI");
+
+  //only when the interrupt is finished
+  // the control has more or less 2/3 ms (we print the time to ensure this important thing)
+  if (flag_timer) {
+
+    cont.general();
+
+    flag_timer = false;
+  }
 }
