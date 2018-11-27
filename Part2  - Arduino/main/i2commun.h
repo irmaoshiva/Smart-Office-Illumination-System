@@ -39,6 +39,7 @@ class I2COMMUN
     int sendAckLedOff;
     int dest_ledOff;
     int start_calib;
+    int count_x;
     int ack_K;
     int flag_getK;
     int K_nr;

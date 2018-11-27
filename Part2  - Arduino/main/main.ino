@@ -1,7 +1,7 @@
 #include "i2commun.h"
 #include <EEPROM.h>
 
-int led_pin = 11;
+int led_pin = 3;
 
 I2COMMUN i2c(led_pin);
 
@@ -11,6 +11,9 @@ int nr_nos = 1;
 void setup() {
   Serial.begin(2000000);
   my_adr = EEPROM.read(0);
+
+  Serial.print("my_adr: ");
+  Serial.println(my_adr);
 
   Wire.begin(my_adr); // receive data
 
@@ -28,6 +31,8 @@ void setup() {
 void loop() {
 
   i2c.check_flags();
+
+  kklkljljljllkjlk
 }
 
 void receiveEvent(int howMany) {
