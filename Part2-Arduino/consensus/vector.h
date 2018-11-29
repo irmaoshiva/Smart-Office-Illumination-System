@@ -47,19 +47,30 @@ class Vector {
       return *this;
     }
 
-    T& operator*( const Vector& v1 ) {
-      T& aux;
+    T operator*( const Vector& v1 ) {
+      T aux = 0;
 
-      if ( this.sz != v1.sz ) {
+      if ( this->sz != v1.sz ) {
         Serial.println("Different lenghts!");
       }
       else {
         for ( int i = 0; i != v1.sz; i++ ) {
-          aux = aux + (this.elem[i] * v1.elem[i]);
+          aux = aux + (this->elem[i] * v1.elem[i]);
         }
       }
 
       return aux;
+    }
+
+   float getNorm( )
+    {
+      int i;
+      int sum = 0;
+      
+      for (i = 0; i < sz; i++)
+        sum = sum + pow(elem[i], 2);
+
+      return pow(sum, 0.5);
     }
 };
 
