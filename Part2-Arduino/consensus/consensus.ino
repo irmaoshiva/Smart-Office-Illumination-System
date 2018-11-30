@@ -1,25 +1,16 @@
 #include "vector.h"
 #include "node.h"
 
+  Node n1(0.07,1,50,80,0);
+  Node n2(0.07,1,50,270,1);
+
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(2000000);
-  
-  Node n1;
-  Node n2;
-
-  n1.d[0] = 1;
-  n1.d[1] = 3;
-
-  n1.d_av[0] = 1;
-  n1.d_av[1] = 3;
-
-  int x = n1.d*n1.d_av;
-
-  Serial.println(x);
+  Serial.begin(9600);
+       n1.Primal_solve();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
 
+  // put your main code here, to run repeatedly:
 }

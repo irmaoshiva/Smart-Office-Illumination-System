@@ -35,6 +35,7 @@ class Vector {
     }
 
     Vector& operator=( const Vector& a ) {
+      
       if (this != &a) { //check self assignment
         T* p = new T[ a.sz ];
         for ( int i = 0; i != a.sz; ++i )
@@ -47,6 +48,16 @@ class Vector {
       return *this;
     }
 
+    //produto de um vetor a uma constante (sem mudar o this)
+     Vector operator*(double a ) {
+      Vector <T> aux(this->sz);
+        for ( int i = 0; i != sz; ++i )
+          aux[i]=elem[i]*a;
+      return aux;
+    }
+
+    
+    //produto interno de vetores
     T operator*( const Vector& v1 ) {
       T aux = 0;
 
@@ -61,8 +72,32 @@ class Vector {
 
       return aux;
     }
+    Vector operator-(Vector a){
+      Serial.println("dentro do operator -");
+      Serial.println(a.elem[0]);
+      Serial.println(this->elem[0]);
+       Serial.println(a[1]);
+      Serial.println(this->elem[1]);
+      Vector <T> aux(this->sz);
+        for ( int i = 0; i <this-> sz; i++ )
+          aux[i]=elem[i]-a[i];
+      return aux;
+    }
 
-   float getNorm( )
+     Vector operator+(Vector a){
+      Serial.println("dentro do operator +");
+      Serial.println(a.elem[0]);
+      Serial.println(this->elem[0]);
+       Serial.println(a[1]);
+      Serial.println(this->elem[1]);
+      Vector aux(this->sz);
+        for ( int i = 0; i <this-> sz; i++ )
+          aux[i]=elem[i]+a[i];
+      return aux;
+    }
+    
+
+   float norm( )
     {
       int i;
       int sum = 0;
