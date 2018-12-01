@@ -12,7 +12,7 @@
 
 class Node {
   private:
-  
+
   public:
 
     double rho;
@@ -25,21 +25,18 @@ class Node {
 
     float n;
     int m;
-    int cost_best;
+    float cost_best;
     int c;
     int o;
     int L;
     int index;
 
     Node();
-    Node(float _rho, int _c, int _o, int _L,int _index);
+    Node(float _rho, int _c, int _o, int _L, int _index);
     void Primal_solve();
-    bool check_feasibility(Vector <float> _d);
-    float evaluate_cost(Vector <float> _d);
-    void updateBestCost(Vector <float> _d_solut);
-
-
-
+    bool check_feasibility( Vector <float>& _d_solut );
+    float evaluate_cost(Vector <float>& _d_solut);
+    void updateBestCost(Vector <float>& _d_solut);
 
 };
 
