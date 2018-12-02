@@ -25,7 +25,7 @@ class I2COMMUN
 
     int send_myAddress;
     int destination;
-    int recalibration;
+    int recalib;
     int readPerturbation;
     int dest_perturb;
     float ext_ilum;
@@ -40,11 +40,9 @@ class I2COMMUN
     int ack_K;
     int flag_getK;
     int K_nr;
-    int ack_consensus;
     int nr_nos;
 
 
-    int consensus; 
     Node n1;
 
 
@@ -58,24 +56,23 @@ class I2COMMUN
 
   public:
 
+    int consensus;
+
+    int ack_consensus;
 
     I2COMMUN();
-    I2COMMUN(Node &_n1,int _pin_led);
-    void write_i2c(byte dest_address, byte action);
-    int checkAdress(int _my_adr);
+    I2COMMUN( int _pin_led );
+    float convert_ADC_to_Lux( float Vi_value );
+    int checkAdress( int _my_adr, Vector <float>& _k );
+    void write_i2c( byte dest_address, byte action );
     int findAllNodes();
-    void check_flags();
-    void performAction(char _action, int _source_adr);
-    int getNextOne();
     void readOwnPerturbation();
+    void getK( Vector <float>& _k );
+    int getNextOne( Vector <float>& _k );
+    void recalibration( Vector <float>& _k );
     void start_calibration();
-    float convert_ADC_to_Lux(float Vi_value);
-
-    float K[128];
-
-
-
-
+    void check_flags( Vector <float>& _k );
+    void performAction( char _action, int _source_adr, Vector <float>& _k );
 };
 
 
