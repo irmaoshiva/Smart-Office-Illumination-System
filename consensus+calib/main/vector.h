@@ -27,7 +27,7 @@ class Vector {
       return sz;
     }
 
-    T& operator[](int i) {
+    T& operator[](byte i) {
       if (i >= sz)
         Serial.println("Out of bound access!");
 

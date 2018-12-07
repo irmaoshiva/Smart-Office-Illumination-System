@@ -9,31 +9,15 @@ I2COMMUN::I2COMMUN() {
   last_node = 0;
   first_node = 0;
 
-  send_myAddress = 0;
   destination = 0;
 
-  recalib = 0;
-  readPerturbation = 0;
-  dest_perturb = 0;
-
   nr_nos = 0;
+  deskStatus = 0;
 
   ext_ilum = 0;
   lux_max = 0;
 
-  ack_perturb = 0;
-  nr_ledOff = 0;
-  sendAckLedOff = 0;
-  dest_ledOff = 0;
-  start_calib = 0;
-  ack_K = 0;
-  flag_getK = 0;
-  K_nr = -1;
-  count_x = 0;
-
-  consensus = 0;
-  ack_consensus = 0;
-
+  counterAck = 0;
 
   //isto é para tirar daqui
   m = 0;
@@ -49,29 +33,15 @@ I2COMMUN::I2COMMUN( int _pin_led ) {
   last_node = 0;
   first_node = 0;
 
-  send_myAddress = 0;
   destination = -1;
 
-  recalib = 0;
-  readPerturbation = 0;
-  dest_perturb = -1;
   nr_nos = 0;
+  deskStatus = 0;
 
   ext_ilum = 0;
   lux_max = 0;
 
-  ack_perturb = 0;
-  nr_ledOff = 0;
-  sendAckLedOff = 0;
-  dest_ledOff = -1;
-  start_calib = 0;
-  ack_K = 0;
-  flag_getK = 0;
-  K_nr = -1;
-  count_x = 0;
-
-  consensus = 0;
-  ack_consensus = 0;
+  counterAck = 0;
 
   //isto é para tirar daqui
   m = -0.7;
@@ -93,26 +63,25 @@ int I2COMMUN::checkAdress( int _my_adr, Vector <float>& _k ) {
   //esta so assim pq ainda se vai meter aqui a resolução de conflitos caso já exista este endereço
   my_adr = _my_adr;
   _k[my_adr] = 0;
+
   return my_adr;
 }
 
-
-
-void I2COMMUN::write_i2c(byte dest_address, byte action) {
+void I2COMMUN::write_i2c(uint8_t dest_address, char action) {
   Wire.beginTransmission(dest_address);
   Wire.write(action);
-  Wire.write((byte) my_adr);
+  Wire.write((uint8_t) my_adr);
   Wire.endTransmission();
 }
 
-int I2COMMUN::findAllNodes() {
+void I2COMMUN::findAllNodes() {
 
   nr_nos = 1;
 
   first_node = my_adr;
   last_node = my_adr;
 
-  write_i2c((byte) 0x00, (byte) 'h');
+  write_i2c((byte) 0x00, 'h');
 
   unsigned long aux;
   aux = millis();
@@ -127,29 +96,28 @@ int I2COMMUN::findAllNodes() {
 
   if (my_adr != first_node)
   {
-    write_i2c((byte) first_node, (byte) 'x');
+    write_i2c((uint8_t) first_node, 'x');
     Serial.println("enviei um x");
   }
 
   if (nr_nos == 1)
   {
-    start_calib = 1;
-    Serial.println("sou o unico vou começar a calibrar");
+    deskStatus = START_CALIBRATION;
+    Serial.println("Sou o unico vou começar a calibrar");
   }
-
-  return nr_nos;
 }
 
+void I2COMMUN::readOwnPerturbation( Node& _n1 ) {
 
-
-void I2COMMUN::readOwnPerturbation() {
   ext_ilum = analogRead(A0);
   ext_ilum = convert_ADC_to_Lux(ext_ilum);
+
+  //_n1.o = ext_ilum;
 
   Serial.print("ext_ilum: ");
   Serial.println(ext_ilum);
 
-  write_i2c((byte) dest_perturb, (byte) 'p');
+  write_i2c((uint8_t) destination, 'k');
 }
 
 void I2COMMUN::getK( Vector <float>& _k ) {
@@ -163,15 +131,15 @@ void I2COMMUN::getK( Vector <float>& _k ) {
   Serial.print("aux: ");
   Serial.println(aux);
 
-  _k[K_nr] = (aux - ext_ilum) / 255;
+  _k[destination] = (aux - ext_ilum) / 255;
 
-  Serial.print("K_nr: ");
-  Serial.println(K_nr);
+  Serial.print("destination: ");
+  Serial.println(destination);
 
-  Serial.print("_k[K_nr]: ");
-  Serial.println(_k[K_nr]);
+  Serial.print("_k[destination]: ");
+  Serial.println(_k[destination]);
 
-  write_i2c((byte) K_nr, (byte) 'y');
+  write_i2c((uint8_t) destination, 'k');
 }
 
 int I2COMMUN::getNextOne( Vector <float>& _k ) {
@@ -191,18 +159,24 @@ int I2COMMUN::getNextOne( Vector <float>& _k ) {
   return -1 ;
 }
 
-void I2COMMUN::recalibration( Vector <float>& _k ) {
+void I2COMMUN::waitingAck() {
+  while (1) {
+    if (counterAck >= (nr_nos - 1)) {
+      counterAck = 0;
+      break;
+    }
+  }
+}
+
+
+void I2COMMUN::recalibration( Vector <float>& _k, Node& _n1 ) {
   int next_node;
 
-
   analogWrite(pin_led, 255);
-  unsigned prev_time = millis();
+  delay(200);
 
-  while (1)
-  {
-    if ((millis() - prev_time) > 150)
-      break;
-  }
+  //mandar broadcast para todos lerem com a minha luminosidade maxima
+  write_i2c((byte) 0x00, (byte) 'm');
 
   lux_max = analogRead(A0);
   lux_max = convert_ADC_to_Lux(lux_max);
@@ -217,16 +191,7 @@ void I2COMMUN::recalibration( Vector <float>& _k ) {
   Serial.print("_k[my_adr]: ");
   Serial.println(_k[my_adr]);
 
-  //mandar broadcast para todos lerem com a minha luminosidade maxima
-  write_i2c((byte) 0x00, (byte) 'm');
-
-  while (1) {
-    if (ack_K >= (nr_nos - 1))
-      break;
-
-    Serial.print("ack_K: ");
-    Serial.println(ack_K);
-  }
+  waitingAck();
 
   next_node = getNextOne(_k);
   analogWrite(pin_led, 0);
@@ -237,41 +202,41 @@ void I2COMMUN::recalibration( Vector <float>& _k ) {
 
   if (next_node != -1)
   {
-    write_i2c((byte) next_node, (byte) 's');
+    write_i2c((uint8_t) next_node, 's');
   }
   else
   {
     Serial.println("acabou a calibração");
 
-    //enviar uma flag para começar o consensus
-    write_i2c((byte) 0x00, (byte) 'c');
-    consensus = 1;
+    if ( nr_nos > 1 )
+    {
+      //enviar uma flag para começar o consensus
+      write_i2c((uint8_t) 0x00, 'c');
+      deskStatus = CONSENSUS;
+      _k[0] = 2;
+      _k[1] = 1;
+      _n1.n = _k.quad_norm();
+      _n1.m = _n1.n - pow( _k[_n1.index], 2 );
+    }
   }
 }
-
 
 void I2COMMUN::start_calibration() {
 
   analogWrite(pin_led, 0);
-  delay(200);
 
   //todos desligarem o led
-  write_i2c((byte) 0x00, (byte) 'v');
+  write_i2c((uint8_t) 0x00, 'v');
 
   //verificar que todos desligaram o led (ver o que fazer caso nao desliguem)
   //manda para todos a informaçao de que podem ler a perturb. externa!
-  while (1) {
-    if (nr_ledOff >= (nr_nos - 1))
-      break;
+  waitingAck();
 
-    Serial.print("nr_ledOff: ");
-    Serial.println(nr_ledOff);
-  }
+  delay(200);
 
-  write_i2c((byte) 0x00, (byte) 'l');
+  write_i2c((uint8_t) 0x00, 'l');
 
   //para o caso do first node, este lê já aqui o seu
-  delay(100);
   ext_ilum = analogRead(A0);
   ext_ilum = convert_ADC_to_Lux(ext_ilum);
 
@@ -280,69 +245,68 @@ void I2COMMUN::start_calibration() {
 
   //verificar que ja todos mediram a sua perturb externa
   //depois o 1º começa a acender, dps o 2º.. etc
-  while (1) {
-    if (ack_perturb >= (nr_nos - 1))
-      break;
-  }
+  waitingAck();
 
   //pq ja estamos no node 1, entao ele vai começar a calibrar-se ja
-  recalib = 1;
+  deskStatus = RECALIBRATION;
 }
 
-void I2COMMUN::check_flags( Vector <float>& _k ) {
-  int error;
-
-  if (send_myAddress == 1)
+void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
+  if (deskStatus == SEND_MY_ADDRESS)
   {
-    write_i2c((byte) destination, (byte) 'a');
+    write_i2c((uint8_t) destination, 'a');
 
-    send_myAddress = 0;
+    deskStatus = 0;
     destination = -1;
   }
 
-  if (sendAckLedOff)
-  {
-    write_i2c((byte) dest_ledOff, (byte) 'o');
-
-    dest_ledOff = -1;
-    sendAckLedOff = 0;
-  }
-
-  if (readPerturbation)
-  {
-    readOwnPerturbation();
-    dest_perturb = -1;
-    readPerturbation = 0;
-  }
-
-  if (flag_getK)
-  {
-    getK(_k);
-    flag_getK = 0;
-  }
-
-  if (recalib)
-  {
-
-    recalibration(_k);
-    recalib = 0;
-  }
-
-  if (start_calib)
+  if (deskStatus == START_CALIBRATION)
   {
     start_calibration();
-    start_calib = 0;
+    deskStatus = 0;
   }
+
+  if (deskStatus == LED_OFF)
+  {
+    write_i2c((uint8_t) destination, 'k');
+
+    deskStatus = 0;
+    destination = -1;
+  }
+
+  if (deskStatus == PERTURBATION)
+  {
+    readOwnPerturbation( _n1 );
+
+    deskStatus = 0;
+    destination = -1;
+  }
+
+  if (deskStatus == RECALIBRATION)
+  {
+    recalibration(_k, _n1);
+
+    deskStatus = 0;
+  }
+
+  if (deskStatus == COMPUTE_K)
+  {
+    getK(_k);
+    deskStatus = 0;
+    destination = -1;
+  }
+
 }
 
-void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k )
+void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k, Node& _n1 )
 {
 
   switch (_action) {
 
     case 'h':
-      send_myAddress = 1;
+      deskStatus = SEND_MY_ADDRESS;
       destination = _source_adr;
+
       //qd entra um novo a meio, tenho de recalcular a rede toda
       if (_k[_source_adr] == -1)
       {
@@ -350,6 +314,7 @@ void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k 
           first_node = _source_adr;
         if (_source_adr > last_node)
           last_node = _source_adr;
+
         nr_nos++;
         _k[_source_adr] = 0;
 
@@ -371,6 +336,7 @@ void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k 
           first_node = _source_adr;
         if (_source_adr > last_node)
           last_node = _source_adr;
+
         nr_nos++;
         _k[_source_adr] = 0;
 
@@ -385,51 +351,46 @@ void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k 
       }
       break;
 
-    case 's':
-      recalib = 1;
+    case 'x':
+      counterAck++;
+      if (counterAck = (nr_nos - 1))
+      {
+        deskStatus = START_CALIBRATION;
+        counterAck = 0;
+      }
       break;
 
     case 'v':
       analogWrite(pin_led, 0);
-      sendAckLedOff = 1;
-      dest_ledOff = _source_adr;
+
+      deskStatus = LED_OFF;
+      destination = _source_adr;
       break;
 
-    case 'o':
-      nr_ledOff++;
+    case 'k':
+      counterAck++;
       break;
 
     case 'l':
-      readPerturbation = 1;
-      dest_perturb = _source_adr;
-      break;
-
-    case 'p':
-      ack_perturb++;
-      break;
-
-    case 'x':
-      count_x++;
-      if (count_x = (nr_nos - 1))
-        start_calib = 1;
+      deskStatus = PERTURBATION;
+      destination = _source_adr;
       break;
 
     case 'm':
-      flag_getK = 1;
-      K_nr = _source_adr;
+      deskStatus = COMPUTE_K;
+      destination = _source_adr;
       break;
 
-    case 'y':
-      ack_K++;
+    case 's':
+      deskStatus = RECALIBRATION;
       break;
 
     case 'c':
-      consensus = 1;
+      deskStatus = CONSENSUS;
+      _k[0] = 2;
+      _k[1] = 1;
+      _n1.n = _k.quad_norm();
+      _n1.m = _n1.n - pow( _k[0], 2 );
       break;
-
-    case 'z':
-      ack_consensus++;
-      break;
-
   }
 }
