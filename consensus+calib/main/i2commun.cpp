@@ -74,7 +74,7 @@ void I2COMMUN::write_i2c(uint8_t dest_address, char action) {
   Wire.endTransmission();
 }
 
-void I2COMMUN::findAllNodes() {
+void I2COMMUN::findAllNodes( Vector <float>& _k, Node& _n1 ) {
 
   nr_nos = 1;
 
@@ -85,25 +85,33 @@ void I2COMMUN::findAllNodes() {
 
   unsigned long aux;
   aux = millis();
-
   while (1) {
-    if (millis() - aux >= 2000)
+    if (millis() - aux >= 5000)
       break;
   }
 
   Serial.print("nr_nos: ");
   Serial.println(nr_nos);
 
-  if (my_adr != first_node)
-  {
-    write_i2c((uint8_t) first_node, 'x');
-    Serial.println("enviei um x");
-  }
+  check_flags(_k, _n1);
 
   if (nr_nos == 1)
   {
     deskStatus = START_CALIBRATION;
     Serial.println("Sou o unico vou começar a calibrar");
+  }
+  else
+  {
+    if (my_adr != first_node)
+    {
+      write_i2c((uint8_t) first_node, 'x');
+      Serial.println("enviei um x");
+    }
+    else
+    {      
+      deskStatus = START_CALIBRATION;
+      Serial.println("Sou o primeiro vou começar a calibrar");
+    }
   }
 }
 
@@ -266,34 +274,43 @@ void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
 
   switch (deskStatus) {
     case SEND_MY_ADDRESS:
+      Serial.println("Porque e que nao vim aqui???");
       write_i2c((uint8_t) destination, 'a');
 
       deskStatus = 0;
       destination = -1;
+      break;
+
 
     case START_CALIBRATION:
       start_calibration(_n1);
+      break;
+
 
     case LED_OFF:
       write_i2c((uint8_t) destination, 'k');
 
       deskStatus = 0;
       destination = -1;
+      break;
 
     case PERTURBATION:
       readOwnPerturbation( _n1 );
 
       deskStatus = 0;
       destination = -1;
+      break;
 
     case RECALIB:
       recalibration(_k, _n1);
+      break;
 
     case COMPUTE_K:
       getK(_k);
-      
+
       deskStatus = 0;
       destination = -1;
+      break;
   }
 }
 
@@ -377,6 +394,7 @@ void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k,
 
     case 'm':
       deskStatus = COMPUTE_K;
+      
       destination = _source_adr;
       break;
 

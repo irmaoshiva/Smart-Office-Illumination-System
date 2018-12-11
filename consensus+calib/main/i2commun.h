@@ -56,7 +56,7 @@ class I2COMMUN
     float convert_ADC_to_Lux( float Vi_value );
     int checkAdress( int _my_adr, Vector <float>& _k );
     void write_i2c( uint8_t dest_address, char action );
-    void findAllNodes();
+    void findAllNodes( Vector <float>& _k, Node& _n1 );
     void readOwnPerturbation( Node& _n1 );
     void getK( Vector <float>& _k );
     int getNextOne( Vector <float>& _k );

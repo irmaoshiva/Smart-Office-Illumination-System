@@ -91,7 +91,7 @@ void setup() {
   //active broadcast
   TWAR = (my_adr << 1) | 1;
 
-  i2c.findAllNodes();
+  i2c.findAllNodes(k, n1);
 
   Serial.print("k[0]: ");
   Serial.println(k[0]);
@@ -108,7 +108,7 @@ void loop() {
   {
 
     //acrescentar condiçao de saida com d - d_av
-    if ( iterations < 70 ) {
+    if ( iterations < 50 ) {
       n1.Primal_solve(k);
       
       Wire.beginTransmission(0x00);
@@ -154,6 +154,9 @@ void loop() {
       Serial.print("n1.y[1]: ");
       Serial.println(n1.y[1]);
 
+      Serial.print("iterations: ");
+      Serial.println(iterations);
+      
       iterations ++;
     }
     else
