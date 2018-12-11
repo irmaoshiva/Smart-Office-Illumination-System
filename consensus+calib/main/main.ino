@@ -161,7 +161,8 @@ void loop() {
     }
     else
     {
-      i2c.deskStatus = 0; 
+      i2c.deskStatus = 0;
+      iterations = 0;
     }
   }
 }
