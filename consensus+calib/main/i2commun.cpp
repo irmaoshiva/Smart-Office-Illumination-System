@@ -264,47 +264,37 @@ void I2COMMUN::start_calibration( Node& _n1 ) {
 
 void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
 
-  if (deskStatus == SEND_MY_ADDRESS)
-  {
-    write_i2c((uint8_t) destination, 'a');
+  switch (deskStatus) {
+    case SEND_MY_ADDRESS:
+      write_i2c((uint8_t) destination, 'a');
 
-    deskStatus = 0;
-    destination = -1;
+      deskStatus = 0;
+      destination = -1;
+
+    case START_CALIBRATION:
+      start_calibration(_n1);
+
+    case LED_OFF:
+      write_i2c((uint8_t) destination, 'k');
+
+      deskStatus = 0;
+      destination = -1;
+
+    case PERTURBATION:
+      readOwnPerturbation( _n1 );
+
+      deskStatus = 0;
+      destination = -1;
+
+    case RECALIB:
+      recalibration(_k, _n1);
+
+    case COMPUTE_K:
+      getK(_k);
+      
+      deskStatus = 0;
+      destination = -1;
   }
-
-  if (deskStatus == START_CALIBRATION)
-  {
-    start_calibration(_n1);
-  }
-
-  if (deskStatus == LED_OFF)
-  {
-    write_i2c((uint8_t) destination, 'k');
-
-    deskStatus = 0;
-    destination = -1;
-  }
-
-  if (deskStatus == PERTURBATION)
-  {
-    readOwnPerturbation( _n1 );
-
-    deskStatus = 0;
-    destination = -1;
-  }
-
-  if (deskStatus == RECALIB)
-  {
-    recalibration(_k, _n1);
-  }
-
-  if (deskStatus == COMPUTE_K)
-  {
-    getK(_k);
-    deskStatus = 0;
-    destination = -1;
-  }
-
 }
 
 void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k, Node& _n1 )
