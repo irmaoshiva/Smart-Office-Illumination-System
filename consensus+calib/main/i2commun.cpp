@@ -112,7 +112,7 @@ void I2COMMUN::readOwnPerturbation( Node& _n1 ) {
   ext_ilum = analogRead(A0);
   ext_ilum = convert_ADC_to_Lux(ext_ilum);
 
-  //_n1.o = ext_ilum;
+  _n1.o = ext_ilum;
 
   Serial.print("ext_ilum: ");
   Serial.println(ext_ilum);
@@ -203,6 +203,7 @@ void I2COMMUN::recalibration( Vector <float>& _k, Node& _n1 ) {
   if (next_node != -1)
   {
     write_i2c((uint8_t) next_node, 's');
+    deskStatus = 0;
   }
   else
   {
@@ -213,15 +214,20 @@ void I2COMMUN::recalibration( Vector <float>& _k, Node& _n1 ) {
       //enviar uma flag para começar o consensus
       write_i2c((uint8_t) 0x00, 'c');
       deskStatus = CONSENSUS;
-      _k[0] = 2;
-      _k[1] = 1;
+
+      for (int i = 0; i < nr_nos; i++)
+        _k[i] = _k[i] * 2.55;
+
       _n1.n = _k.quad_norm();
       _n1.m = _n1.n - pow( _k[_n1.index], 2 );
+    }
+    else {
+      deskStatus = 0;
     }
   }
 }
 
-void I2COMMUN::start_calibration() {
+void I2COMMUN::start_calibration( Node& _n1 ) {
 
   analogWrite(pin_led, 0);
 
@@ -240,6 +246,8 @@ void I2COMMUN::start_calibration() {
   ext_ilum = analogRead(A0);
   ext_ilum = convert_ADC_to_Lux(ext_ilum);
 
+  _n1.o = ext_ilum;
+
   Serial.print("ext_ilum: ");
   Serial.println(ext_ilum);
 
@@ -248,10 +256,14 @@ void I2COMMUN::start_calibration() {
   waitingAck();
 
   //pq ja estamos no node 1, entao ele vai começar a calibrar-se ja
-  deskStatus = RECALIBRATION;
+  deskStatus = RECALIB;
+
+  Serial.print("deskStatus: ");
+  Serial.println(deskStatus);
 }
 
 void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
+
   if (deskStatus == SEND_MY_ADDRESS)
   {
     write_i2c((uint8_t) destination, 'a');
@@ -262,8 +274,7 @@ void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
 
   if (deskStatus == START_CALIBRATION)
   {
-    start_calibration();
-    deskStatus = 0;
+    start_calibration(_n1);
   }
 
   if (deskStatus == LED_OFF)
@@ -282,11 +293,9 @@ void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
     destination = -1;
   }
 
-  if (deskStatus == RECALIBRATION)
+  if (deskStatus == RECALIB)
   {
     recalibration(_k, _n1);
-
-    deskStatus = 0;
   }
 
   if (deskStatus == COMPUTE_K)
@@ -382,15 +391,15 @@ void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k,
       break;
 
     case 's':
-      deskStatus = RECALIBRATION;
+      deskStatus = RECALIB;
       break;
 
     case 'c':
       deskStatus = CONSENSUS;
-      _k[0] = 2;
-      _k[1] = 1;
+      for (int i = 0; i < nr_nos; i++)
+        _k[i] = _k[i] * 2.55;
       _n1.n = _k.quad_norm();
-      _n1.m = _n1.n - pow( _k[0], 2 );
+      _n1.m = _n1.n - pow( _k[_n1.index], 2 );
       break;
   }
 }

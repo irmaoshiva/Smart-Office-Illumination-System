@@ -6,8 +6,6 @@
 #include <math.h>
 
 #include "Arduino.h"
-
-
 #include "vector.h"
 
 class Node {

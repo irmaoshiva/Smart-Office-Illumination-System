@@ -20,7 +20,7 @@ Vector <float> k = Vector <float> (2);
 I2COMMUN i2c(led_pin);
 
 //criar o nó
-Node n1(0.07, 1, 50, 80, 0);
+Node n1(0.07, 1, 50, 20, 0);
 //Node n2(0.07, 1, 50, 270, 1);
 
 int my_adr;
@@ -108,7 +108,7 @@ void loop() {
   {
 
     //acrescentar condiçao de saida com d - d_av
-    if ( iterations < 50 ) {
+    if ( iterations < 70 ) {
       n1.Primal_solve(k);
       
       Wire.beginTransmission(0x00);
@@ -121,6 +121,9 @@ void loop() {
       Wire.endTransmission();
 
       i2c.waitingAck();
+
+      n1.d[0] = round(n1.d[0]);
+      n1.d[1] = round(n1.d[1]);
 
       Serial.print("n1.d[0]: ");
       Serial.println(n1.d[0]);
@@ -153,10 +156,10 @@ void loop() {
 
       iterations ++;
     }
-  }
-  else
-  {
-    i2c.deskStatus = 0; 
+    else
+    {
+      i2c.deskStatus = 0; 
+    }
   }
 }
 

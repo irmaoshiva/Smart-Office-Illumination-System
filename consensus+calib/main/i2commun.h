@@ -18,7 +18,7 @@
 #define START_CALIBRATION 2
 #define LED_OFF 3
 #define PERTURBATION 4
-#define RECALIBRATION 5
+#define RECALIB 5
 #define COMPUTE_K 6
 #define CONSENSUS 7
 
@@ -49,7 +49,7 @@ class I2COMMUN
 
     int nr_nos;
 
-    uint8_t deskStatus;
+    volatile int deskStatus;
 
     I2COMMUN();
     I2COMMUN( int _pin_led );
@@ -62,7 +62,7 @@ class I2COMMUN
     int getNextOne( Vector <float>& _k );
     void waitingAck();
     void recalibration( Vector <float>& _k, Node& _n1 );
-    void start_calibration();
+    void start_calibration( Node& _n1 );
     void check_flags( Vector <float>& _k, Node& _n1 );
     void performAction( char _action, int _source_adr, Vector <float>& _k, Node& _n1 );
 };
