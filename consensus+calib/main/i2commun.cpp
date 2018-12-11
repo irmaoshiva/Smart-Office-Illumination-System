@@ -274,18 +274,15 @@ void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
 
   switch (deskStatus) {
     case SEND_MY_ADDRESS:
-      Serial.println("Porque e que nao vim aqui???");
       write_i2c((uint8_t) destination, 'a');
 
       deskStatus = 0;
       destination = -1;
       break;
 
-
     case START_CALIBRATION:
       start_calibration(_n1);
       break;
-
 
     case LED_OFF:
       write_i2c((uint8_t) destination, 'k');

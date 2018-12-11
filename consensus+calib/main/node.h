@@ -21,7 +21,7 @@ class Node {
     Vector <float> aux_soma = Vector <float>(2);
 
     float n;
-    int m;
+    float m;
     float cost_best;
     int c;
     int o;
