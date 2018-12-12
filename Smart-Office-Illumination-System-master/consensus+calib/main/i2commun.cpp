@@ -75,7 +75,7 @@ void I2COMMUN::write_i2c(uint8_t dest_address, char action) {
 }
 
 void I2COMMUN::findAllNodes(Vector <float>& _k, Node& _n1) {
-  Serial.println("dentro do findAllNodes");
+
   nr_nos = 1;
 
   first_node = my_adr;
@@ -91,8 +91,7 @@ void I2COMMUN::findAllNodes(Vector <float>& _k, Node& _n1) {
       break;
   }
 
-  check_flags(_k,  _n1);
-
+  check_flags(_k, _n1);
 
   Serial.print("nr_nos: ");
   Serial.println(nr_nos);
@@ -103,10 +102,10 @@ void I2COMMUN::findAllNodes(Vector <float>& _k, Node& _n1) {
     Serial.println("enviei um x");
   }
 
-  if (nr_nos == 1 || ((nr_nos > 1) && (my_adr == first_node)))
+  if ( nr_nos == 1 || ( (nr_nos > 1) && (my_adr == first_node) ) )
   {
     deskStatus = START_CALIBRATION;
-    Serial.println("Sou o unico vou começar a calibrar");
+    Serial.println("vou começar a calibrar");
   }
 }
 
@@ -173,13 +172,15 @@ int I2COMMUN::waitingAck(Vector <float>& _k, Node& _n1) {
     if ((millis() - startTime) > 500)
     {
       deskStatus = 0;
-       for (int i = 0; i < 2; i++)
-           _k[i] = -1;
+      for (int i = 0; i < nr_nos; i++)
+        _k[i] = -1;
       my_adr = checkAdress(my_adr, _k);
       findAllNodes(_k, _n1);
+      
       return 0;
     }
   }
+  
   return 1;
 }
 

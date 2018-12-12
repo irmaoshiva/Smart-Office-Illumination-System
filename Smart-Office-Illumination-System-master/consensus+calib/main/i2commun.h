@@ -62,9 +62,9 @@ class I2COMMUN
     int getNextOne( Vector <float>& _k );
     int waitingAck(Vector <float>& _k, Node& _n1);
     void notExists();
-    
+
     void recalibration( Vector <float>& _k, Node& _n1 );
-    void start_calibration( Vector <float>& _k,Node& _n1 );
+    void start_calibration( Vector <float>& _k, Node& _n1 );
     void check_flags( Vector <float>& _k, Node& _n1 );
     void performAction( char _action, int _source_adr, Vector <float>& _k, Node& _n1 );
 };

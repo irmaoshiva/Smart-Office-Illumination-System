@@ -19,7 +19,7 @@ Vector <float> k = Vector <float> (2);
 I2COMMUN i2c(led_pin);
 
 //criar o nó
-Node n1(0.07, 1, 50, 20, 1);
+Node n1(0.07, 1, 50, 20, 0);
 //Node n2(0.07, 1, 50, 270, 1);
 
 int my_adr;
@@ -90,7 +90,7 @@ void setup() {
   //active broadcast
   TWAR = (my_adr << 1) | 1;
 
-  i2c.findAllNodes(k,n1);
+  i2c.findAllNodes(k, n1);
 
   Serial.print("k[0]: ");
   Serial.println(k[0]);
@@ -105,11 +105,13 @@ void loop() {
 
   if ( ( i2c.deskStatus == CONSENSUS ) && ( i2c.nr_nos > 1 ) )
   {
+    Serial.println("SO DEVIA VIR AQUI 50X");
 
     //acrescentar condiçao de saida com d - d_av
-    if ( iterations < 50 ) {
+    if ( iterations < 50 ) 
+    {
       n1.Primal_solve(k);
-      
+
       Wire.beginTransmission(0x00);
       Wire.write('k');
       Wire.write((uint8_t) my_adr);
@@ -119,56 +121,58 @@ void loop() {
       }
       Wire.endTransmission();
 
-
-    Serial.println("VOU ENTRAR NO WAITING???");
-      if(i2c.waitingAck(k,n1))
+      Serial.println("VOU ENTRAR NO WAITING???");
+      if (i2c.waitingAck(k, n1))
       {
         n1.d[0] = round(n1.d[0]);
         n1.d[1] = round(n1.d[1]);
-  
+
         Serial.print("n1.d[0]: ");
         Serial.println(n1.d[0]);
         Serial.print("n1.d[1]: ");
         Serial.println(n1.d[1]);
-  
+
         n1.aux_soma = n1.aux_soma + n1.d;
-  
+
         Serial.print("n1.aux_soma[0]: ");
         Serial.println(n1.aux_soma[0]);
         Serial.print("n1.aux_soma[1]: ");
         Serial.println(n1.aux_soma[1]);
-  
+
         n1.d_av = n1.aux_soma * (double)( 1 / (double) i2c.nr_nos );
-  
+
         Serial.print("n1.d_av[0]: ");
         Serial.println(n1.d_av[0]);
         Serial.print("n1.d_av[1]: ");
         Serial.println(n1.d_av[1]);
-  
+
         for (int j = 0; j < i2c.nr_nos; j++)
           n1.aux_soma[j] = 0;
-  
+
         n1.y = n1.y + (n1.d - n1.d_av) * n1.rho;
-  
+
         Serial.print("n1.y[0]: ");
         Serial.println(n1.y[0]);
         Serial.print("n1.y[1]: ");
         Serial.println(n1.y[1]);
-  
-      Serial.print("numero de iterações");
-      Serial.println(iterations);
+
+        Serial.print("iterations: ");
+        Serial.println(iterations);
+        
         iterations ++;
       }
-    else
+      else
       {
         Serial.println("PAROU A MEIO DO CONSENSUSSSS");
-        iterations=0;
+        iterations = 0;
       }
     }
     else
     {
+      Serial.println("DEVIA VIR AQUI 1X");
+      
       i2c.deskStatus = 0;
-      iterations=0; 
+      iterations = 0;
     }
   }
 }
