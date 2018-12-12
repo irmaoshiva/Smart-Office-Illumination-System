@@ -4,6 +4,8 @@ Real-Time Cooperative Decentralized Control of a Smart Office Illumination Syste
 - CHAMAR FIND_ALL_NODES DE X EM X TEMPO
 - QUANDO TA SO 1 CHAMAR FFW OU FAZER CONSENSUS SOZINHO
 
+-> VER DE QUANTO EM QUANTO TEMPO VERIFICAR SE ESTÃO TODOS OS NOS ATIVOS
+
 
 Dúvidas:
 Se o 1 bazar (como nos estamos a fazer no start calibration que so começa se for o gajo nº 1)
