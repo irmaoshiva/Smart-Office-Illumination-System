@@ -1,0 +1,19 @@
+PROF:
+ - para fazer exit() (fechar mm o programa principal), n é preciso fazer nada pois não? o OS liberta todo o ambiente do programa, certo?
+
+ - faço uma espera ativa pelas mensagens vindas dos arduinos? (só um thread é q trata disso, so...)
+
+ - lower bounds? é suposto ler do arduino? ou ter definido?
+
+ - há problema de usar bueda mutexes?
+
+ - não rendia mais usar read/write locks (se der) para aceder à base de dados?
+
+ - é suposto assumir q se está a receber informação das desks pelo sampling period? ou é suposto registar mesmo os tempos em q se recebe os dados, e usar esses tempos para os cálculos?
+
+ - é indiferente pôr .hpp ou .h?
+
+ - acabar todas as strings de resposta com '\n', ou só a do last minute buffer?
+
+ EU:
+ - fazer um throw para a função change_slave_addr (ver como é chamada na main)
