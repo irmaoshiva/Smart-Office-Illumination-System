@@ -1,17 +1,17 @@
 # Smart-Office-Illumination-System
 Real-Time Cooperative Decentralized Control of a Smart Office Illumination System
 
-- CHAMAR FIND_ALL_NODES DE X EM X TEMPO
-- QUANDO TA SO 1 CHAMAR FFW OU FAZER CONSENSUS SOZINHO
 
--> VER DE QUANTO EM QUANTO TEMPO VERIFICAR SE ESTÃO TODOS OS NOS ATIVOS
+# DUVIDAS
+
+->METER TUDO A LER DA EPROM, E CALCULAR OS K'S
+
+# [calibração]
+-> meter tudo com N generico e nao de 0 a 2;
+-> meter uma flag para so chamar o start calibration uma vez!!
 
 
-Dúvidas:
-Se o 1 bazar (como nos estamos a fazer no start calibration que so começa se for o gajo nº 1)
-- Imagina que recebo uma mensagem de hello a meio do resto do codigo, eu nao quero correr mais nada do resto do codigo quero ir logo para o check_flags como é que eu garanto que isso acontece?
-
-CONSENSUS:
+## CONSENSUS:
 ->iluminaçao a mais do que o sistema nao consegue dar! quero 5000 lux! ele calcula todas e nenhuma é fazivel, temos de decidir o que fazer nesse caso. programar isso;
 -> condição do erro ( vai dar poucas iterações)
 
