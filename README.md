@@ -7,6 +7,7 @@ Real-Time Cooperative Decentralized Control of a Smart Office Illumination Syste
 ->METER TUDO A LER DA EPROM, E CALCULAR OS K'S
 -> meter index= my_addr! e meter isto na eprom, cuidado com o que metemos como variaveis de entrada
 -> do consensus para controlador deve ir o d ou d_av?
+-> o controlador deve ser atualizado com os novos valores sempre ou so no final do consensus?
 
 # [calibração]
 -> meter tudo com N generico e nao de 0 a 2;
