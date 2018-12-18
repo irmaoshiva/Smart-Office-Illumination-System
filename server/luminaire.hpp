@@ -49,8 +49,8 @@ public:
 	float get_energy(int desk);
 	float get_comfort(int desk);
 	float get_comfort_flicker(int desk);
-	std::vector<float> get_lux_holder(int desk);
-	std::vector<float> get_duty_cycle_holder(int desk);
+	void get_lux_holder(int desk, std::vector<float>& holder);
+	void get_duty_cycle_holder(int desk, std::vector<float>& holder);
 	void insert_sample(int desk, float lux, float duty_cycle, bool occupancy, float control_ref);
 	void set_parameters(int desk, float lower_bound_off, float lower_bound_on, float ext_lux);
 	void clear_desk(int desk);

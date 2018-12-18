@@ -168,30 +168,30 @@ float deskDB::get_comfort_flicker(){
 		return c/s;
 }
 
-std::vector<float> deskDB::get_lux_holder(){
-	std::vector<float> lux_holder;
+void deskDB::get_lux_holder(std::vector<float>& holder){
+	//std::vector<float> lux_holder;
 
 	weak_lock();//________________PROTECTED REGION________________
 		int samples_held = count_samples_held();
 		//insert buff values into vector to return
 		for (int i = 0; i < samples_held; i++) 
-			lux_holder.push_back(lux[i]);
+			holder.push_back(lux[i]);
 	weak_unlock();//________________PROTECTED REGION________________
 	
-	return lux_holder;// ver do outro lado if lux_holder.empty()
+	//return holder;// ver do outro lado if lux_holder.empty()
 }
 
-std::vector<float> deskDB::get_duty_cycle_holder(){
-	std::vector<float> duty_holder;
+void deskDB::get_duty_cycle_holder(std::vector<float>& holder){
+	//std::vector<float> duty_holder;
 
 	weak_lock();//________________PROTECTED REGION________________
 		int samples_held = count_samples_held();
 		//insert buff values into vector to return
 		for (int i = 0; i < samples_held; i++) 
-			duty_holder.push_back(duty_cycle[i]);
+			holder.push_back(duty_cycle[i]);
 	weak_unlock();//________________PROTECTED REGION________________
 
-	return duty_holder;
+	//return holder;
 }
 
 void deskDB::insert_sample(float lux_, float duty_cycle_, bool occupancy_, float control_ref_){

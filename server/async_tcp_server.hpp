@@ -33,8 +33,8 @@ private:
 	void send_reply(std::string& response);
 	//void begin_stream(int desk, char type, std::function<float(int)> get_value);
 	//void send_stream(int desk, char type, std::atomic<bool> &stream_up, std::function<float(int)> get_value);
-	void begin_stream(int desk, char type, std::chrono::time_point<std::chrono::system_clock>& start, float (luminaire::*get_value)(int));
-	void send_stream(int desk, char type, std::atomic<bool> &stream_up, std::chrono::time_point<std::chrono::system_clock>& start, float (luminaire::*get_value)(int));
+	void begin_stream(int desk, char type, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int));
+	void send_stream(int desk, char type, std::atomic<bool> &stream_up, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int));
 };
 
 class server {

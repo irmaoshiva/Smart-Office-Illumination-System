@@ -44,12 +44,12 @@ void session::send_reply(std::string& response){
 }
 
 //send current value and restart reading requests
-void session::begin_stream(int desk, char type, std::chrono::time_point<std::chrono::system_clock>& start, float (luminaire::*get_value)(int)){
+void session::begin_stream(int desk, char type, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int)){
 	float result = (office.*get_value)(desk);
 	
 	auto current = std::chrono::system_clock::now();
 	std::chrono::duration<float> duration = current - start;
-	float time_ = duration.count();
+	float time_ = duration.count() * 1000;
 	
 	std::string response = "s ";
 	response += type;
@@ -64,14 +64,14 @@ void session::begin_stream(int desk, char type, std::chrono::time_point<std::chr
 }
 
 //stream cycle
-void session::send_stream(int desk, char type, std::atomic<bool> &stream_up, std::chrono::time_point<std::chrono::system_clock>& start, float (luminaire::*get_value)(int)){
+void session::send_stream(int desk, char type, std::atomic<bool> &stream_up, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int)){
 	float result = (office.*get_value)(desk);
 	if (result < 0)
 		stream_up = false;
 	
 	auto current = std::chrono::system_clock::now();
 	std::chrono::duration<float> duration = current - start;
-	float time_ = duration.count();
+	float time_ = duration.count() * 1000;
 	
 	std::string response = "s ";
 	response += type;
@@ -84,7 +84,7 @@ void session::send_stream(int desk, char type, std::atomic<bool> &stream_up, std
 	if (stream_up){
 		auto self(shared_from_this());
 		async_write(s, buffer(response, response.length()), 
-			[this, self, desk, type, &stream_up, &start, get_value]
+			[this, self, desk, type, &stream_up, start, get_value]
 			(const error_code &ec, std::size_t sz){
 				if (! ec)
 					send_stream(desk, type, stream_up, start, get_value);
@@ -256,14 +256,16 @@ void session::interpret_request(){
 			response += ' ';
 			switch(data[2]){
 				case 'l':{
-					std::vector<float> l_holder = office.get_lux_holder(desk);
+					std::vector<float> l_holder;
+					office.get_lux_holder(desk, l_holder);
 					for (unsigned int i = 0; i < l_holder.size(); i ++)
 						b_response = b_response + ',' + '\n' + std::to_string(l_holder[i]);
 					send_reply(b_response);
 				break;
 				}
 				case 'd':{
-					std::vector<float> d_holder = office.get_duty_cycle_holder(desk);
+					std::vector<float> d_holder;
+					office.get_duty_cycle_holder(desk, d_holder);
 					for (unsigned int i = 0; i < d_holder.size(); i ++)
 						b_response = b_response + ',' + '\n' + std::to_string(d_holder[i]);
 					send_reply(b_response);

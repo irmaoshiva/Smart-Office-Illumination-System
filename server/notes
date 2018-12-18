@@ -3,29 +3,18 @@
 
  - Quando tiver o master request, fazer na main também.
 
- - ver bem erros de tentar aceder a merdas q nao existem... posicoes negativas e etc...
-
  - se der tempo, ver se dá p meter outra thread qd ha muitos clientes (variável estatica na classe session a contar o numero de sessions)
 
  Prof:
-  - devo pôr a função que é recebida como argumento com um ponteiro?
-
   - NO async_tcp_server.cpp quando faço std::vector<float> = getbuffer(), devia fazer esse vector a entrar por referência e ser preenchido, ou devo deixar assim?
+    Passar a referência!!
 
   - Float para o restart time e para o last_sample_time não podem ser pequenos? (pede no enunciado para mandar de volta um float para o cliente)
 
-  - Não consegui criar o vetor de desks normalmente por causa da replicação de mutexes. Criei um vetor de shared_pointers para desks e depois criei as desks com make_shared. É boa ideia?
-
-  - Para a stream posso cagar nos spurious wake ups da condition variable? como é uma stream o máximo q acontece é receber mais um valor com um tempo mais curto em relação ao último...
-
   - A falg das streams vai ser utilizada pelo server assincrono (one thread), as variáveis precisam de ser atómicas?
-
-  - Esperar 1ms não é muito?
 
   - Se a luminária estiver em baixo, posso mandar sempre -1 aos requests do cliente(e para occupancy, energias e confortos mandar 0)? e na stream, se após algum tempo n houver nenhuma resposta, mando -1 e fecho?
 
    - posso usar system_clock e não steady_clock? já agr qual é a diferença? Devemos usar o high resolution clock?
 
    - Se um cliente pede para fazer restart enquanto outro está a calcular somatŕoios de parametros de todas as desks a partir do restart vão começar a vir zeros de algumas desks, é chill? (já agr com streams tb vai começar a enviar -1s)
-
-   - Posso usar condition variable para a stream? se tiver timeout pequeno? (100ms)

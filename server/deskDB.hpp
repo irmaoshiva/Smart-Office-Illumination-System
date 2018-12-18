@@ -39,8 +39,8 @@ public:
 	float get_energy();
 	float get_comfort();
 	float get_comfort_flicker();
-	std::vector<float> get_lux_holder();
-	std::vector<float> get_duty_cycle_holder();
+	void get_lux_holder(std::vector<float>& holder);
+	void get_duty_cycle_holder(std::vector<float>& holder);
 	void insert_sample(float lux_, float duty_cycle_, bool occupancy_, float control_ref_);
 	void set_parameters(float lower_bound_off, float lower_bound_on, float ext_lux_);
 	void clearDB();
