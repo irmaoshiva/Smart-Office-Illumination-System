@@ -1,6 +1,12 @@
 #include "luminaire.hpp"
 
-luminaire::luminaire(){
+luminaire::luminaire(int last_desk_, int samples_holder)
+    : last_desk(last_desk_), desksDB(last_desk + 1)
+    , cv(last_desk + 1), stream_mtx(last_desk + 1)
+{
+    for(int i = 0; i <= last_desk; i ++)
+        desksDB[i] = std::make_shared<deskDB> (samples_holder);
+
     if(gpioInitialise()<0)
         printf("\nFailed to initialize gpio");
     else
@@ -8,9 +14,8 @@ luminaire::luminaire(){
 }
 
 luminaire::~luminaire(){
-    //close_slave(xfer);
+    close_slave(xfer);
     gpioTerminate();
-    printf("luminaire destructed\n");
 }
 
 int luminaire::init_slave(bsc_xfer_t &xfer, int addr) {
@@ -34,12 +39,21 @@ int luminaire::init_slave(bsc_xfer_t &xfer, int addr) {
     return bscXfer(&xfer);
 }
 
-void luminaire::read_data(){
-    while (1){
+void luminaire::close_slave(bsc_xfer_t &xfer){
+    xfer.control=0;
+    bscXfer(&xfer);
+}
+
+void luminaire::read_data(bool& server_up){
+    while (server_up){
+        usleep(500);
         mtx.lock();
         xfer.txCnt = 0;
-        if (status = bscXfer(&xfer) < 0)
+        status = bscXfer(&xfer);
+        if (status < 0){
+            std::cout << "\nbscXfer() returned negative status.\n";
             break;
+        }
         if (xfer.rxCnt > 0){
             printf("\nReceived %d bytes\n", xfer.rxCnt);
 
@@ -53,31 +67,169 @@ void luminaire::read_data(){
 void luminaire::stop_read(){
     if (read_state){
         mtx.lock();
-        read_state--;
+        read_state = false;
     }
 }
 
 void luminaire::resume_read(){
     if(!read_state){
         mtx.unlock();
-        read_state++;
+        read_state = true;
     }
 
 }
 
 void luminaire::change_slave_addr(int addr){
+    if (! read_state){
+        throw std::invalid_argument("\nCan't change the slave address if luminaire is stopped."); 
+        return;
+    }
     mtx.lock();
     status = init_slave(xfer, addr);
     if (status < 0){
-        printf("\nAddress change failed, default address reset.\n");
+        throw std::invalid_argument("\nAddress change failed, default address reset."); 
         status = init_slave(xfer, addr);
     }
     mtx.unlock();
 }
 
-/*
-int luminaire::close_slave(bsc_xfer_t &xfer){
-xfer.control=0;
-bscXfer(&xfer);
+
+
+/************************
+        Desks Access
+*************************/
+float luminaire::get_lux(int desk){
+    if (desk > last_desk)
+        return-1;
+
+    return desksDB[desk]->get_lux();
 }
-*/
+
+int ret_cvwait;
+float luminaire::get_lux_on_change(int desk){
+    if (desk > last_desk)
+        return-1;
+    
+    std::unique_lock<std::mutex> lock(stream_mtx[desk]);
+    if (cv[desk].wait_for(lock, std::chrono::seconds(0.1)), []{return ret_cvwait == 1;})
+        return desksDB[desk]->get_lux();
+    else //timed out
+        return -1;
+}
+
+float luminaire::get_duty_cycle(int desk){
+    if (desk > last_desk)
+        return-1;
+    
+    return desksDB[desk]->get_duty_cycle();
+}
+
+float luminaire::get_duty_cycle_on_change(int desk){
+    if (desk > last_desk)
+        return-1;
+    
+    std::unique_lock<std::mutex> lock(stream_mtx[desk]);
+    if (cv[desk].wait_for(lock, std::chrono::seconds(2)), []{return ret_cvwait == 1;})
+        return desksDB[desk]->get_duty_cycle();
+    else //timed out
+        return -1;
+}
+
+bool luminaire::get_occupancy(int desk){
+    if (desk > last_desk)
+        return false;
+    
+    return desksDB[desk]->get_occupancy();
+}
+
+float luminaire::get_lower_bound(int desk){
+    if (desk > last_desk)
+        return-1;
+
+    return desksDB[desk]->get_lower_bound();
+}
+
+float luminaire::get_ext_lux(int desk){
+    if (desk > last_desk)
+        return-1;
+
+    return desksDB[desk]->get_ext_lux();
+}
+
+float luminaire::get_control_ref(int desk){
+    if (desk > last_desk)
+        return-1;
+
+    return desksDB[desk]->get_control_ref();
+}
+
+float luminaire::get_power(int desk){
+    if (desk > last_desk)
+        return-1;
+
+    return desksDB[desk]->get_power();
+}
+
+float luminaire::get_restart_time(int desk){
+    if (desk > last_desk)
+        return-1;
+
+    return desksDB[desk]->get_restart_time();
+}
+
+float luminaire::get_energy(int desk){
+    if (desk > last_desk)
+        return-1;
+
+    return desksDB[desk]->get_energy();
+}
+
+float luminaire::get_comfort(int desk){
+    if (desk > last_desk)
+        return-1;
+
+    return desksDB[desk]->get_comfort();
+}
+
+float luminaire::get_comfort_flicker(int desk){
+    if (desk > last_desk)
+        return-1;
+
+    return desksDB[desk]->get_comfort_flicker();
+}
+
+std::vector<float> luminaire::get_lux_holder(int desk){
+    if (desk > last_desk)
+        return std::vector<float>();
+
+    return desksDB[desk]->get_lux_holder();
+}
+
+std::vector<float> luminaire::get_duty_cycle_holder(int desk){
+    if (desk > last_desk)
+        return std::vector<float>();
+    
+    return desksDB[desk]->get_duty_cycle_holder();
+}
+
+void luminaire::insert_sample(int desk, float lux, float duty_cycle, bool occupancy, float control_ref){
+    if (desk > last_desk)
+        return;
+
+    desksDB[desk]->insert_sample(lux, duty_cycle, occupancy, control_ref);
+    cv[desk].notify_all();
+}
+
+void luminaire::set_parameters(int desk, float lower_bound_off, float lower_bound_on, float ext_lux){
+    if (desk > last_desk)
+        return;
+
+    desksDB[desk]->set_parameters(lower_bound_off, lower_bound_on, ext_lux);
+}
+
+void luminaire::clear_desk(int desk){
+    if (desk > last_desk)
+        return;
+
+    desksDB[desk]->clearDB();
+}

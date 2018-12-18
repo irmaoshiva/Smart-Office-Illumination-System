@@ -1,19 +1,31 @@
-PROF:
- - para fazer exit() (fechar mm o programa principal), n é preciso fazer nada pois não? o OS liberta todo o ambiente do programa, certo?
-
- - faço uma espera ativa pelas mensagens vindas dos arduinos? (só um thread é q trata disso, so...)
-
- - lower bounds? é suposto ler do arduino? ou ter definido?
-
- - há problema de usar bueda mutexes?
-
- - não rendia mais usar read/write locks (se der) para aceder à base de dados?
-
- - é suposto assumir q se está a receber informação das desks pelo sampling period? ou é suposto registar mesmo os tempos em q se recebe os dados, e usar esses tempos para os cálculos?
-
- - é indiferente pôr .hpp ou .h?
-
- - acabar todas as strings de resposta com '\n', ou só a do last minute buffer?
-
  EU:
- - fazer um throw para a função change_slave_addr (ver como é chamada na main)
+ - se o restart no async_server.cpp n estiver a dar, ver se não é pq estou a assumir q o "r" tem q vir com um \n à frente. //VER QD TIVER O MASTER REQUEST
+
+ - Quando tiver o master request, fazer na main também.
+
+ - ver bem erros de tentar aceder a merdas q nao existem... posicoes negativas e etc...
+
+ - se der tempo, ver se dá p meter outra thread qd ha muitos clientes (variável estatica na classe session a contar o numero de sessions)
+
+ Prof:
+  - devo pôr a função que é recebida como argumento com um ponteiro?
+
+  - NO async_tcp_server.cpp quando faço std::vector<float> = getbuffer(), devia fazer esse vector a entrar por referência e ser preenchido, ou devo deixar assim?
+
+  - Float para o restart time e para o last_sample_time não podem ser pequenos? (pede no enunciado para mandar de volta um float para o cliente)
+
+  - Não consegui criar o vetor de desks normalmente por causa da replicação de mutexes. Criei um vetor de shared_pointers para desks e depois criei as desks com make_shared. É boa ideia?
+
+  - Para a stream posso cagar nos spurious wake ups da condition variable? como é uma stream o máximo q acontece é receber mais um valor com um tempo mais curto em relação ao último...
+
+  - A falg das streams vai ser utilizada pelo server assincrono (one thread), as variáveis precisam de ser atómicas?
+
+  - Esperar 1ms não é muito?
+
+  - Se a luminária estiver em baixo, posso mandar sempre -1 aos requests do cliente(e para occupancy, energias e confortos mandar 0)? e na stream, se após algum tempo n houver nenhuma resposta, mando -1 e fecho?
+
+   - posso usar system_clock e não steady_clock? já agr qual é a diferença? Devemos usar o high resolution clock?
+
+   - Se um cliente pede para fazer restart enquanto outro está a calcular somatŕoios de parametros de todas as desks a partir do restart vão começar a vir zeros de algumas desks, é chill? (já agr com streams tb vai começar a enviar -1s)
+
+   - Posso usar condition variable para a stream? se tiver timeout pequeno? (100ms)
