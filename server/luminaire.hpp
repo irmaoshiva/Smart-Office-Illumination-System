@@ -14,7 +14,8 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
-#define SLAVE_ADDR_DEFAULT 0x00
+#define SLAVE_ADDR_DEFAULT 0x7F
+
 
 class luminaire{
 	bsc_xfer_t xfer;
