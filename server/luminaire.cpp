@@ -59,7 +59,7 @@ void luminaire::read_data(bool& server_up){
                 printf("\nReceived %d bytes\n", xfer.rxCnt);
 
                 for(int j=0;j<xfer.rxCnt;j++)
-                printf("%d",xfer.rxBuf[j]);
+                printf("%d", (int) xfer.rxBuf[j]);
             }
         
         mtx.unlock();
