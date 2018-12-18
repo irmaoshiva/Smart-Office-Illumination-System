@@ -10,6 +10,7 @@ luminaire office(LAST_DESK, SAMPLING_RATE*TIME_HOLDING);
 
 //Ctrl^C signal handler
 void terminate(int signalnum){
+	office.resume_read();
 	server_up = false;
 	std::cout << "\n Press enter to properly finish." << std::endl;
 }
@@ -53,6 +54,7 @@ void read_console(){
 							<< "changeAddr - change raspberrypi reading address;\n"
 							<< "exit - shutdown the program.\n\n";
 		}else if (action == "exit" || ! server_up){
+			office.resume_read();
 			break;
 		}else
 			std::cout << "\nInvalid action\n\n";
