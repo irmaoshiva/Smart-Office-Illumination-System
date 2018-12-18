@@ -48,18 +48,20 @@ void luminaire::read_data(bool& server_up){
     while (server_up){
         usleep(500);
         mtx.lock();
-        xfer.txCnt = 0;
-        status = bscXfer(&xfer);
-        if (status < 0){
-            std::cout << "\nbscXfer() returned negative status.\n";
-            break;
-        }
-        if (xfer.rxCnt > 0){
-            printf("\nReceived %d bytes\n", xfer.rxCnt);
 
-            for(int j=0;j<xfer.rxCnt;j++)
-            printf("%c",xfer.rxBuf[j]);
-        }
+            xfer.txCnt = 0;
+            status = bscXfer(&xfer);
+            if (status < 0){
+                std::cout << "\nbscXfer() returned negative status.\n";
+                break;
+            }
+            if (xfer.rxCnt > 0){
+                printf("\nReceived %d bytes\n", xfer.rxCnt);
+
+                for(int j=0;j<xfer.rxCnt;j++)
+                printf("%d",xfer.rxBuf[j]);
+            }
+        
         mtx.unlock();
     }
 }
