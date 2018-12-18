@@ -9,6 +9,7 @@ Real-Time Cooperative Decentralized Control of a Smart Office Illumination Syste
 -> do consensus para controlador deve ir o d ou d_av?
 -> o controlador deve ser atualizado com os novos valores sempre ou so no final do consensus?
 -> arduino 2 ta na calibração e entre o arduino 1 da merda!!!
+-> ver arredondamentos do consensus!! - o myLux da maior qu eo desired lux
 
 # [calibração]
 -> meter tudo com N generico e nao de 0 a 2;
