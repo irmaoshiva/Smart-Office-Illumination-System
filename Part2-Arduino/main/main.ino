@@ -61,17 +61,12 @@ void Active_InterruptSample() {
 //the interrupt has to be as small as possible
 //and we have to ensure that the loop control has to have less than 10 ms
 ISR(TIMER1_COMPA_vect) {
-  flag_timer = 1; //notify main loop
+  flag_timer = true; //notify main loop
 }
 
 
 void setup() {
   Serial.begin(2000000);
-
-  /*
-    TCCR2B = (TCCR2B & mask) | prescale_pwm;
-    Active_InterruptSample();
-  */
 
   my_adr = EEPROM.read(0);
 
@@ -96,6 +91,10 @@ void setup() {
   Serial.println(k[0]);
   Serial.print("k[1]: ");
   Serial.println(k[1]);
+
+
+  TCCR2B = (TCCR2B & mask) | prescale_pwm;
+  Active_InterruptSample();
 }
 
 
@@ -105,10 +104,8 @@ void loop() {
 
   if ( ( i2c.deskStatus == CONSENSUS ) && ( i2c.nr_nos > 1 ) )
   {
-    Serial.println("SO DEVIA VIR AQUI 50X");
-
     //acrescentar condiçao de saida com d - d_av
-    if ( iterations < 50 ) 
+    if ( iterations < 50 )
     {
       n1.Primal_solve(k);
 
@@ -158,7 +155,7 @@ void loop() {
 
         Serial.print("iterations: ");
         Serial.println(iterations);
-        
+
         iterations ++;
       }
       else
@@ -170,19 +167,22 @@ void loop() {
     else
     {
       Serial.println("DEVIA VIR AQUI 1X");
-      
+
       i2c.deskStatus = 0;
       iterations = 0;
     }
   }
+
+  if(flag_timer)
+  {
+    flag_timer = false;
+  }
 }
 
 void receiveEvent(int howMany) {
-  char c;
   char action;
   int source_adr;
   int i = 0;
-  int flag = 0;
 
   //check data on BUS
   if (Wire.available() > 0)

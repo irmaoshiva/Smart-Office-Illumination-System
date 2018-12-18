@@ -87,14 +87,14 @@ void I2COMMUN::findAllNodes(Vector <float>& _k, Node& _n1) {
   aux = millis();
 
   while (1) {
-    if (millis() - aux >= 5000)
+    if (millis() - aux >= 1000)
       break;
   }
 
-  check_flags(_k, _n1);
-
   Serial.print("nr_nos: ");
   Serial.println(nr_nos);
+
+  check_flags(_k, _n1);
 
   if (my_adr != first_node)
   {
@@ -163,24 +163,32 @@ int I2COMMUN::getNextOne( Vector <float>& _k ) {
 
 int I2COMMUN::waitingAck(Vector <float>& _k, Node& _n1) {
   unsigned long startTime = millis();
+
+  Serial.print("startTime: ");
+  Serial.println(startTime);
+
   while (1) {
+    delayMicroseconds(10);
+
     if (counterAck >= (nr_nos - 1)) {
       counterAck = 0;
       break;
     }
 
-    if ((millis() - startTime) > 500)
+    if ((millis() - startTime) > 1000)
     {
+      Serial.println("PORQUE E QUE VIM AQUI? :(");
+
       deskStatus = 0;
       for (int i = 0; i < nr_nos; i++)
         _k[i] = -1;
       my_adr = checkAdress(my_adr, _k);
       findAllNodes(_k, _n1);
-      
+
       return 0;
     }
   }
-  
+
   return 1;
 }
 
@@ -245,6 +253,8 @@ void I2COMMUN::recalibration( Vector <float>& _k, Node& _n1 ) {
 }
 
 void I2COMMUN::start_calibration(Vector <float>& _k, Node& _n1 ) {
+
+  Serial.println("START CALIBRATION!! LA LA LA LA");
 
   analogWrite(pin_led, 0);
 
@@ -324,7 +334,6 @@ void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
 
 void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k, Node& _n1 )
 {
-
   switch (_action) {
 
     case 'h':
