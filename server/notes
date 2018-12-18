@@ -5,6 +5,8 @@
 
  - se der tempo, ver se dá p meter outra thread qd ha muitos clientes (variável estatica na classe session a contar o numero de sessions)
 
+ - ver na deskDB se o lassampletime foi ha mt tempo, enviar a dizer q a desk ta em baixo.
+
  Prof:
   - NO async_tcp_server.cpp quando faço std::vector<float> = getbuffer(), devia fazer esse vector a entrar por referência e ser preenchido, ou devo deixar assim?
     Passar a referência!!
