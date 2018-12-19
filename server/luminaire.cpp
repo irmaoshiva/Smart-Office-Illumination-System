@@ -44,21 +44,26 @@ void luminaire::close_slave(bsc_xfer_t &xfer){
     bscXfer(&xfer);
 }
 
-void luminaire::read_reaclib(){
-    int desk  = (int) xfer.rxBuf[1];
-    float lux = (int) xfer.rxBuf[2] + 0.01 * (int) xfer.rxBuf[3];
-    float duty_cycle = (int) xfer.rxBuf[4] + 0.01 * (int) xfer.rxBuf[5];
-    bool occupancy = (bool) xfer.rxBuf[6];
-    float control_ref = (int) xfer.rxBuf[7] + 0.01 * (int) xfer.rxBuf[8];
+void 
 
-    insert_sample(desk, lux, duty_cycle, occupancy, control_ref);
+void luminaire::read_reaclib(int first){
+    int desk  = (int) xfer.rxBuf[first + 1];
+    float lux = (int) xfer.rxBuf[first + 2] + 0.01 * (int) xfer.rxBuf[first + 3];
+    float duty_cycle = (int) xfer.rxBuf[first + 4] + 0.01 * (int) xfer.rxBuf[first + 5];
+    bool occupancy = (bool) xfer.rxBuf[first + 6];
+    float control_ref = (int) xfer.rxBuf[first + 7] + 0.01 * (int) xfer.rxBuf[first + 8];
+
+    //insert_sample(desk, lux, duty_cycle, occupancy, control_ref);
+
+    //if (xfer.rxCnt > first + 8)
+
 }
 
-void luminaire::read_sample(){
-    int desk  = (int) xfer.rxBuf[1];
-    float lower_bound_off = (int) xfer.rxBuf[2] + 0.01 * (int) xfer.rxBuf[3];
-    float lower_bound_on = (int) xfer.rxBuf[4] + 0.01 * (int) xfer.rxBuf[5];
-    float ext_lux = (int) xfer.rxBuf[6] + 0.01 * (int) xfer.rxBuf[7];
+void luminaire::read_sample(int first){
+    int desk  = (int) xfer.rxBuf[first + 1];
+    float lower_bound_off = (int) xfer.rxBuf[first + 2] + 0.01 * (int) xfer.rxBuf[first + 3];
+    float lower_bound_on = (int) xfer.rxBuf[first + 4] + 0.01 * (int) xfer.rxBuf[first + 5];
+    float ext_lux = (int) xfer.rxBuf[first + 6] + 0.01 * (int) xfer.rxBuf[first + 7];
 
     set_parameters(desk, lower_bound_off, lower_bound_on, ext_lux);
 }
@@ -77,14 +82,14 @@ void luminaire::read_data(bool& server_up){
             if (xfer.rxCnt > 0){
                 //printf("\nReceived %d bytes\n", xfer.rxCnt);
                 if ((char) xfer[0] == 'r')
-                    read_reaclib();
+                    read_reaclib(0);
                 else if((char) xfer[0] == 's')
-                    read_sample();
+                    read_sample(0);
                 /*
                 printf("\nReceived %d bytes\n", xfer.rxCnt);
 
                 for(int j=0;j<xfer.rxCnt;j++)
-                printf("%d", (int) xfer.rxBuf[j]);*/
+                printf("%d", (int) xfer.rxBuf[first + j]);*/
             }
         
         mtx.unlock();
