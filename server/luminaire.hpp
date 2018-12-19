@@ -32,6 +32,8 @@ class luminaire{
 public:
 	luminaire(int last_desk_, int samples_holder);
 	~luminaire();
+	void luminaire::read_reaclib();
+	void luminaire::read_sample();
 	void read_data(bool& server_up);
 	void stop_read();
 	void resume_read();
