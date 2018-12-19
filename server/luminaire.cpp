@@ -96,15 +96,8 @@ void luminaire::read_data(bool& server_up){
                 std::cout << "\nbscXfer() returned negative status.\n";
                 break;
             }
-            if (xfer.rxCnt > 0){
-                printf("\nReceived %d bytes\n", xfer.rxCnt);
-                //make_read(0);
-                /*
-                printf("\nReceived %d bytes\n", xfer.rxCnt);
-
-                for(int j=0;j<xfer.rxCnt;j++)
-                printf("%d", (int) xfer.rxBuf[addr1 + j]);*/
-            }
+            if (xfer.rxCnt > 0)
+                make_read(0);
         
         mtx.unlock();
     }
