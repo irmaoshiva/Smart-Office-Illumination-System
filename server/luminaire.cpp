@@ -44,6 +44,25 @@ void luminaire::close_slave(bsc_xfer_t &xfer){
     bscXfer(&xfer);
 }
 
+void luminaire::read_reaclib(){
+    int desk  = (int) xfer.rxBuf[1];
+    float lux = (int) xfer.rxBuf[2] + 0.01 * (int) xfer.rxBuf[3];
+    float duty_cycle = (int) xfer.rxBuf[4] + 0.01 * (int) xfer.rxBuf[5];
+    bool occupancy = (bool) xfer.rxBuf[6];
+    float control_ref = (int) xfer.rxBuf[7] + 0.01 * (int) xfer.rxBuf[8];
+
+    insert_sample(desk, lux, duty_cycle, occupancy, control_ref);
+}
+
+void luminaire::read_sample(){
+    int desk  = (int) xfer.rxBuf[1];
+    float lower_bound_off = (int) xfer.rxBuf[2] + 0.01 * (int) xfer.rxBuf[3];
+    float lower_bound_on = (int) xfer.rxBuf[4] + 0.01 * (int) xfer.rxBuf[5];
+    float ext_lux = (int) xfer.rxBuf[6] + 0.01 * (int) xfer.rxBuf[7];
+
+    set_parameters(desk, lower_bound_off, lower_bound_on, ext_lux);
+}
+
 void luminaire::read_data(bool& server_up){
     while (server_up){
        // usleep(500);
@@ -57,9 +76,15 @@ void luminaire::read_data(bool& server_up){
             }
             if (xfer.rxCnt > 0){
                 //printf("\nReceived %d bytes\n", xfer.rxCnt);
+                if ((char) xfer[0] == 'r')
+                    read_reaclib();
+                else if((char) xfer[0] == 's')
+                    read_sample();
+                /*
+                printf("\nReceived %d bytes\n", xfer.rxCnt);
 
                 for(int j=0;j<xfer.rxCnt;j++)
-                xfer.rxBuf[j];
+                printf("%d", (int) xfer.rxBuf[j]);*/
             }
         
         mtx.unlock();
