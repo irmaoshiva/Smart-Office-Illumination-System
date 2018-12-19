@@ -55,6 +55,9 @@ void luminaire::make_read(int addr1){
 }
 
 void luminaire::read_sample(int addr1, int desk){
+    if (xfer.rxCnt < addr1 + 3)
+        return;
+
     float lux = (int) xfer.rxBuf[addr1 + 1] + 0.01 * (int) xfer.rxBuf[addr1 + 2];
     float duty_cycle = ( (int) xfer.rxBuf[addr1 + 3] ) / 255;
 
@@ -65,6 +68,9 @@ void luminaire::read_sample(int addr1, int desk){
 }
 
 void luminaire::read_occupancy(int addr1, bool state){
+    if (xfer.rxCnt < addr1 + 3)
+        return;
+
     int desk = (int) xfer.rxBuf[addr1 + 1];
     float control_ref = (int) xfer.rxBuf[addr1 + 2] + 0.01 * (int) xfer.rxBuf[addr1 + 3];
 
@@ -75,6 +81,9 @@ void luminaire::read_occupancy(int addr1, bool state){
 }
 
 void luminaire::read_reaclib(int addr1, int desk){
+    if (xfer.rxCnt < addr1 + 6)
+        return;
+
     float lower_bound_off = (int) xfer.rxBuf[addr1 + 1] + 0.01 * (int) xfer.rxBuf[addr1 + 2];
     float lower_bound_on = (int) xfer.rxBuf[addr1 + 3] + 0.01 * (int) xfer.rxBuf[addr1 + 4];
     float ext_lux = (int) xfer.rxBuf[addr1 + 5] + 0.01 * (int) xfer.rxBuf[addr1 + 6];
@@ -96,6 +105,11 @@ void luminaire::read_data(bool& server_up){
                 std::cout << "\nbscXfer() returned negative status.\n";
                 break;
             }
+            for(int i = 0; i < xfer.rxCnt; i++)
+                printf("%d ", (int) xfer.rxBuf[i]);
+            if (xfer.rxCnt > 0)
+                printf("\n");
+
             if (xfer.rxCnt > 0)
                 make_read(0);
         

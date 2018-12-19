@@ -194,7 +194,7 @@ void deskDB::get_duty_cycle_holder(std::vector<float>& holder){
 	//return holder;
 }
 
-void deskDB::insert_sample(float lux_, float duty_cycle_){
+void deskDB::insert_sample(float lux_, float duty_cycle_){printf("vai inserir sample\n");
 	auto new_sample_time = std::chrono::system_clock::now();
 
 	strong_lock();//________________PROTECTED REGION________________
@@ -218,28 +218,28 @@ void deskDB::insert_sample(float lux_, float duty_cycle_){
 			comfort += comfort_;
 		//accumulate comfort flickering error
 		if (samples_nr >= 3){
-			int sh = count_samples_held();
+			int sh = count_samples_held() - 1;
 			float s1 = lux[sh] - lux[sh-1], s2 = lux[sh-1] - lux[sh-2];
 			if( s1 * s2 < 0)
 				comfort_flicker += (std::fabs(s1) + std::fabs(s2)) / (2*sampling_time);
 		}
 	strong_unlock();//________________PROTECTED REGION________________
-}
+printf("inseriu sample\n");}
 
-void deskDB::set_occupancy(bool occupancy_, float control_ref_){
+void deskDB::set_occupancy(bool occupancy_, float control_ref_){printf("vai inserir ocupacao\n");
 	strong_lock();//________________PROTECTED REGION________________
 		occupancy = occupancy_;
 		control_ref = control_ref_;
 	strong_unlock();//________________PROTECTED REGION________________
-}
+printf("inseriu ocupacao\n");}
 
-void deskDB::set_parameters(float lower_bound_off, float lower_bound_on, float ext_lux_){
+void deskDB::set_parameters(float lower_bound_off, float lower_bound_on, float ext_lux_){printf("vai inserir parametro\n");
 	strong_lock();//________________PROTECTED REGION________________
 		lower_bound[0] = lower_bound_off;
 		lower_bound[1] = lower_bound_on;
 		ext_lux = ext_lux_;
 	strong_unlock();//________________PROTECTED REGION________________
-}
+printf("inseriu parametro\n");}
 
 void deskDB::clearDB(){
 	weak_lock();//________________PROTECTED REGION________________

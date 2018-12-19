@@ -54,7 +54,7 @@ void session::begin_stream(int desk, char type, std::chrono::time_point<std::chr
 	std::string response = "s ";
 	response += type;
 	response += ' ';
-	response += std::to_string(desk);
+	response += std::to_string(desk + 1);
 	response += ' ';
 	response += std::to_string(result);
 	response += ' ';
@@ -76,6 +76,8 @@ void session::send_stream(int desk, char type, std::atomic<bool> &stream_up, std
 	std::string response = "s ";
 	response += type;
 	response += ' ';
+	response += std::to_string(desk + 1);
+	response += ' ';
 	response += std::to_string(result);
 	response += ' ';
 	response += std::to_string(time_);
@@ -94,9 +96,9 @@ void session::send_stream(int desk, char type, std::atomic<bool> &stream_up, std
 }
 
 int session::get_desk(){
-	int desk = std::stoi(&data[4]); 
+	int desk = std::stoi(&data[4]) - 1;
 	if(desk > LAST_DESK || desk < 0) throw std::invalid_argument(" OR desk doesn't exist"); 
-	return desk;
+		return desk;
 }
 
 void session::interpret_request(){
@@ -124,7 +126,7 @@ void session::interpret_request(){
 		}
 		end_desk = desk;
 		response += ' ';
-		response += std::to_string(desk);
+		response += std::to_string(desk + 1);
 		response += ' ';
 	}else{
 		desk = 0;
