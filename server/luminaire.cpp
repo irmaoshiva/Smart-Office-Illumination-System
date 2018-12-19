@@ -46,7 +46,7 @@ void luminaire::close_slave(bsc_xfer_t &xfer){
 
 void luminaire::read_data(bool& server_up){
     while (server_up){
-        usleep(500);
+       // usleep(500);
         mtx.lock();
 
             xfer.txCnt = 0;
@@ -56,10 +56,10 @@ void luminaire::read_data(bool& server_up){
                 break;
             }
             if (xfer.rxCnt > 0){
-                printf("\nReceived %d bytes\n", xfer.rxCnt);
+                //printf("\nReceived %d bytes\n", xfer.rxCnt);
 
                 for(int j=0;j<xfer.rxCnt;j++)
-                printf("%d", (int) xfer.rxBuf[j]);
+                xfer.rxBuf[j];
             }
         
         mtx.unlock();
