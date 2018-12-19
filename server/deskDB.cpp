@@ -194,7 +194,7 @@ void deskDB::get_duty_cycle_holder(std::vector<float>& holder){
 	//return holder;
 }
 
-void deskDB::insert_sample(float lux_, float duty_cycle_, bool occupancy_, float control_ref_){
+void deskDB::insert_sample(float lux_, float duty_cycle_){
 	auto new_sample_time = std::chrono::system_clock::now();
 
 	strong_lock();//________________PROTECTED REGION________________
@@ -208,13 +208,12 @@ void deskDB::insert_sample(float lux_, float duty_cycle_, bool occupancy_, float
 		//write new parameters
 		lux.push_back(lux_);
 		duty_cycle.push_back(duty_cycle_);
-		control_ref = control_ref_;
 		samples_nr ++;
 		last_sample_time = new_sample_time;
 		//accumulate energy
 		energy += POWER * duty_cycle_ * sampling_time;
 		//accumulate comfort error
-		float comfort_ = control_ref_ - lux_;
+		float comfort_ = control_ref - lux_;
 		if (comfort_ > 0) 
 			comfort += comfort_;
 		//accumulate comfort flickering error
@@ -224,6 +223,13 @@ void deskDB::insert_sample(float lux_, float duty_cycle_, bool occupancy_, float
 			if( s1 * s2 < 0)
 				comfort_flicker += (std::fabs(s1) + std::fabs(s2)) / (2*sampling_time);
 		}
+	strong_unlock();//________________PROTECTED REGION________________
+}
+
+void deskDB::set_occupancy(bool occupancy_, float control_ref_){
+	strong_lock();//________________PROTECTED REGION________________
+		occupancy = occupancy_;
+		control_ref = control_ref_;
 	strong_unlock();//________________PROTECTED REGION________________
 }
 

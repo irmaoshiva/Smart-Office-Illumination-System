@@ -32,9 +32,10 @@ class luminaire{
 public:
 	luminaire(int last_desk_, int samples_holder);
 	~luminaire();
-	void make_read(int first);
-	void read_reaclib(int first);
-	void read_sample(int first);
+	void make_read(int addr1);
+	void read_sample(int addr1, int desk);
+	void read_occupancy(int addr1, bool state);
+	void read_reaclib(int addr1, int desk);
 	void read_data(bool& server_up);
 	void stop_read();
 	void resume_read();
@@ -55,7 +56,8 @@ public:
 	float get_comfort_flicker(int desk);
 	void get_lux_holder(int desk, std::vector<float>& holder);
 	void get_duty_cycle_holder(int desk, std::vector<float>& holder);
-	void insert_sample(int desk, float lux, float duty_cycle, bool occupancy, float control_ref);
+	void insert_sample(int desk, float lux, float duty_cycle);
+	void set_occupancy(int desk, bool state, float control_ref);
 	void set_parameters(int desk, float lower_bound_off, float lower_bound_on, float ext_lux);
 	void clear_desk(int desk);
 
