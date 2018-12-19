@@ -15,8 +15,8 @@ class deskDB{//ver o .clear dos circ buffers
 	boost::circular_buffer<float> duty_cycle; // imposed duty cycles// SE DER MERDA A COMPILAR VER SE É PQ AQUI NAO TEM Q SER <float *>
 	unsigned int buff_size;
 	bool occupancy; // is? occupied
-	float lower_bound[2]; // minimal lux desired (0 - unoccupied, 1 - occupied)
-	float ext_lux; // external lux affecting the desk
+	float lower_bound[2] = {0}; // minimal lux desired (0 - unoccupied, 1 - occupied)
+	float ext_lux = 0; // external lux affecting the desk
 	float control_ref; // luminance control reference
 	std::chrono::time_point<std::chrono::system_clock> restart_time; // time of last restart event
 	std::chrono::time_point<std::chrono::system_clock> last_sample_time; // time of last acquired sample
