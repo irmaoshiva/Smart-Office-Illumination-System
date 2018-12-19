@@ -88,8 +88,8 @@ void luminaire::read_data(bool& server_up){
                 break;
             }
             if (xfer.rxCnt > 0){
-                //printf("\nReceived %d bytes\n", xfer.rxCnt);
-                make_read(0);
+                printf("\nReceived %d bytes\n", xfer.rxCnt);
+                //make_read(0);
                 /*
                 printf("\nReceived %d bytes\n", xfer.rxCnt);
 
