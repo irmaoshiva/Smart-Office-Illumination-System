@@ -17,8 +17,8 @@ class session : public std::enable_shared_from_this<session> {
 	char data[max_len];
 	int linked = 0; //is? connected
 
-	std::atomic<bool> lstream_up{false};
-	std::atomic<bool> dstream_up{false};
+	std::vector<bool> lstream_up;
+	std::vector<bool> dstream_up;
 	
 public:
 	session(ip::tcp::socket s_);
@@ -34,7 +34,7 @@ private:
 	//void begin_stream(int desk, char type, std::function<float(int)> get_value);
 	//void send_stream(int desk, char type, std::atomic<bool> &stream_up, std::function<float(int)> get_value);
 	void begin_stream(int desk, char type, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int));
-	void send_stream(int desk, char type, std::atomic<bool> &stream_up, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int));
+	void send_stream(int desk, char type, std::vector<bool>& stream_up, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int));
 };
 
 class server {

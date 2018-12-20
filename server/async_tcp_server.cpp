@@ -9,7 +9,7 @@ extern luminaire office;
 session class functions
 *************************/
 session::session(ip::tcp::socket s_) 
-	: s(std::move(s_)) { }
+	: s(std::move(s_)), lstream_up(LAST_DESK + 1, false), dstream_up(LAST_DESK + 1, false) { }
 
 ip::tcp::socket& session::socket() {return s;}
 
@@ -21,8 +21,8 @@ void session::start() {
 			if (!ec) 
 				interpret_request();
 			else{//if any live stream, stop it
-				lstream_up = false;
-				dstream_up = false;
+				std::fill(lstream_up.begin(), lstream_up.end(), false);
+				std::fill(dstream_up.begin(), dstream_up.end(), false);
 			}
 		}
 	);
@@ -36,8 +36,8 @@ void session::send_reply(std::string& response){
 			if (!ec) 
 				start();
 			else{//if any live stream, stop it
-				lstream_up = false;
-				dstream_up = false;
+				std::fill(lstream_up.begin(), lstream_up.end(), false);
+				std::fill(dstream_up.begin(), dstream_up.end(), false);
 			}
 		}
 	);
@@ -64,10 +64,13 @@ void session::begin_stream(int desk, char type, std::chrono::time_point<std::chr
 }
 
 //stream cycle
-void session::send_stream(int desk, char type, std::atomic<bool> &stream_up, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int)){
+void session::send_stream(int desk, char type, std::vector<bool>& stream_up, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int)){
 	float result = (office.*get_value)(desk);
-	if (result < 0)
-		stream_up = false;
+	if (result < 0){
+		stream_up[desk] = false;
+		std::string s = "desk down";
+		send_reply(s);
+	}
 	
 	auto current = std::chrono::system_clock::now();
 	std::chrono::duration<float> duration = current - start;
@@ -83,10 +86,10 @@ void session::send_stream(int desk, char type, std::atomic<bool> &stream_up, std
 	response += std::to_string(time_);
 	response += '\n';
 
-	if (stream_up){
+	if (stream_up[desk]){
 		auto self(shared_from_this());
 		async_write(s, buffer(response, response.length()), 
-			[this, self, desk, type, &stream_up, start, get_value]
+			[this, self, desk, type, start, get_value, &stream_up]
 			(const error_code &ec, std::size_t sz){
 				if (! ec)
 					send_stream(desk, type, stream_up, start, get_value);
@@ -285,28 +288,28 @@ void session::interpret_request(){
 			auto start = std::chrono::system_clock::now();
 			switch(data[2]){
 				case 'l':{
-					if (! lstream_up){
-						lstream_up = true;
+					if (! lstream_up[desk]){
+						lstream_up[desk] = true;
 						//auto get_lux = std::bind(luminaire::get_lux, office, _1);
 						begin_stream(desk, data[2], start, &luminaire::get_lux);
 						//auto get_lux_on_change = std::bind(luminaire::get_lux_on_change, office, _1);
 						send_stream(desk, data[2], lstream_up, start, &luminaire::get_lux_on_change);
 					}else{
-						lstream_up = false;
+						lstream_up[desk] = false;
 						std::string ack = "ack";
 						send_reply(ack);
 					}
 				break;
 				}
 				case 'd':{
-					if (! dstream_up){
-						dstream_up = true;
+					if (! dstream_up[desk]){
+						dstream_up[desk] = true;
 						//auto get_duty_cycle = std::bind(luminaire::get_duty_cycle, office, _1);
 						begin_stream(desk, data[2], start, &luminaire::get_duty_cycle);
 						//auto get_duty_cycle_on_change = std::bind(luminaire::get_duty_cycle_on_change, office, _1);
 						send_stream(desk, data[2], dstream_up, start, &luminaire::get_duty_cycle_on_change);
 					}else{
-						dstream_up = false;
+						dstream_up[desk] = false;
 						std::string ack = "ack";
 						send_reply(ack);
 					}

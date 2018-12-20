@@ -106,9 +106,9 @@ void luminaire::read_data(bool& server_up){
                 break;
             }
             for(int i = 0; i < xfer.rxCnt; i++)
-                printf("%d ", (int) xfer.rxBuf[i]);
+                //printf("%d ", (int) xfer.rxBuf[i]);
             if (xfer.rxCnt > 0)
-                printf("\n");
+                //printf("\n");
 
             if (xfer.rxCnt > 0)
                 make_read(0);
