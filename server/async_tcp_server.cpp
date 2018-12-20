@@ -30,6 +30,7 @@ void session::start() {
 
 void session::send_reply(std::string& response){
 	response += "\n";
+
 	auto self(shared_from_this());
 	async_write(s, buffer(response, response.length()), 
 		[this, self](const error_code &ec, std::size_t sz){
@@ -68,8 +69,8 @@ void session::send_stream(int desk, char type, std::vector<bool>& stream_up, std
 	float result = (office.*get_value)(desk);
 	if (result < 0){
 		stream_up[desk] = false;
-		std::string s = "desk down";
-		send_reply(s);
+		std::string s_ = "desk down";
+		send_reply(s_);
 	}
 	
 	auto current = std::chrono::system_clock::now();
@@ -108,8 +109,8 @@ void session::interpret_request(){
 	std::string invalid = "invalid request";
 	if (data[0] == 'r' && data[1] == '\n'){
 		//restartsystem...------......
-		std::string s = "system restarted";
-		send_reply(s);
+		std::string s_ = "system restarted";
+		send_reply(s_);
 		return;
 	}
 	if (data[1] != ' ' || data[3] != ' '){

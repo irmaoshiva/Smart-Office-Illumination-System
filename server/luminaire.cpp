@@ -59,7 +59,7 @@ void luminaire::read_sample(int addr1, int desk){
         return;
 
     float lux = (int) xfer.rxBuf[addr1 + 1] + 0.01 * (int) xfer.rxBuf[addr1 + 2];
-    float duty_cycle = ( (int) xfer.rxBuf[addr1 + 3] ) / 255;
+    float duty_cycle = ( (int) xfer.rxBuf[addr1 + 3] ) / 2.55;
 
     insert_sample(desk, lux, duty_cycle);
 
@@ -105,10 +105,10 @@ void luminaire::read_data(bool& server_up){
                 std::cout << "\nbscXfer() returned negative status.\n";
                 break;
             }
-            for(int i = 0; i < xfer.rxCnt; i++)
-                //printf("%d ", (int) xfer.rxBuf[i]);
+            /*for(int i = 0; i < xfer.rxCnt; i++)
+                /printf("%d ", (int) xfer.rxBuf[i]);
             if (xfer.rxCnt > 0)
-                //printf("\n");
+                printf("\n");*/
 
             if (xfer.rxCnt > 0)
                 make_read(0);
