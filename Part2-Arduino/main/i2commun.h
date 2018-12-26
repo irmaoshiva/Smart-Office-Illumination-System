@@ -3,16 +3,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "Arduino.h"
 #include <WSWire.h>
+#include "Arduino.h"
+
+#include "controller.h"
 #include "node.h"
 #include "vector.h"
-
-#define OCCUPIED 60
-#define UNOCCUPIED 20
-#define FILTER_SAMPLES 20
-#define VCC 5
-
 
 #define SEND_MY_ADDRESS 1
 #define START_CALIBRATION 2
@@ -21,29 +17,27 @@
 #define RECALIB 5
 #define COMPUTE_K 6
 #define CONSENSUS 7
+#define GENERAL 8
 
 class I2COMMUN
 {
   private:
 
-    int my_adr;
-    int pin_led;
+    int myAddr;
+    const int pin_led = 3;
+
+    //switch button control variables
+    volatile uint8_t switch_value;
+    volatile uint8_t prev_switch_value;
+    long switch_debounce;
+    long prev_switch_time;
 
     int last_node;
     int first_node;
 
     int destination;
 
-    float ext_ilum;
-    float lux_max;
-
     volatile uint8_t counterAck;
-
-    //isto é para tirar daqui
-    float m;
-    float b;
-    //R1 em KOhm
-    int R1;
 
   public:
 
@@ -51,22 +45,30 @@ class I2COMMUN
 
     volatile int deskStatus;
 
-    I2COMMUN();
-    I2COMMUN( int _pin_led );
-    float convert_ADC_to_Lux( float Vi_value );
-    int checkAdress( int _my_adr, Vector <float>& _k );
-    void write_i2c( uint8_t dest_address, char action );
-    void findAllNodes(Vector <float>& _k, Node& _n1);
-    void readOwnPerturbation( Node& _n1 );
-    void getK( Vector <float>& _k );
-    int getNextOne( Vector <float>& _k );
-    int waitingAck(Vector <float>& _k, Node& _n1);
-    void notExists();
+    const int switch_pin = 10;
 
-    void recalibration( Vector <float>& _k, Node& _n1 );
-    void start_calibration( Vector <float>& _k, Node& _n1 );
-    void check_flags( Vector <float>& _k, Node& _n1 );
-    void performAction( char _action, int _source_adr, Vector <float>& _k, Node& _n1 );
+    float maxLux;
+
+    I2COMMUN();
+    void check_switch( Vector <float>& _k, Node& _n1, CONTROLLER& _cont );
+
+    void checkStatus(Vector <float>& _k, Node& _n1, CONTROLLER& _cont);
+    void changeStatus(String flag, Vector <float>& _k, Node& _n1, CONTROLLER& _cont);
+    
+    int checkAddress( int _myAddr, Vector <float>& _k, Node& _n1, CONTROLLER& _cont );
+    void write_i2c( uint8_t dest_address, char action );
+    void findAllNodes( Vector <float>& _k, Node& _n1, CONTROLLER& _cont );
+    void readOwnPerturbation( Node& _n1, CONTROLLER& _cont );
+    void getK( Vector <float>& _k, CONTROLLER& _cont );
+    int getNextOne( Vector <float>& _k );
+    int waitingAck( Vector <float>& _k, Node& _n1, CONTROLLER& _cont );
+    void recalibration( Vector <float>& _k, Node& _n1, CONTROLLER& _cont );
+    void start_calibration( Vector <float>& _k, Node& _n1, CONTROLLER& _cont );
+    void check_flags( Vector <float>& _k, Node& _n1, CONTROLLER& _cont );
+    void performAction( char _action, int _source_adr, Vector <float>& _k, Node& _n1, CONTROLLER& _cont );
+    void send_RPI_button( int _button_status, float _myLux );
+    void send_RPI_calibration( CONTROLLER& _cont );
+    void send_RPI_sample( CONTROLLER& _cont );
 };
 
 

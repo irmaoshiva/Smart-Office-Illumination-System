@@ -2,29 +2,32 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#include "i2commun.h"
 #include <EEPROM.h>
+
+#include "controller.h"
+#include "i2commun.h"
 
 //timer 0 messes with delay(), mills(), etc
 //timer 1 is used for the sampling period
 //Use in timer 2.
 const byte mask = B11111000;
 int prescale_pwm = 1;
-volatile bool flag_timer = true;
+volatile uint8_t flag_timer = false;
+unsigned long startTime = 0;
 
-int led_pin = 3;
 //aqui devia se o last_node se calhar podemos mudar o retorno da funçao do find_all_nodes
 Vector <float> k = Vector <float> (2);
 
-I2COMMUN i2c(led_pin);
+CONTROLLER cont(true, true, true, true, false);
+
+I2COMMUN i2c;
 
 //criar o nó
-Node n1(0.07, 1, 50, 20, 0);
-//Node n2(0.07, 1, 50, 270, 1);
+Node n1(0.07, 1);
 
-int my_adr;
-
+int myAddr = 0;
 int iterations = 0;
+float myLux = 0;
 
 //------------------------------ INTERRUPT CODE ------------------------------
 //------Interrupt used to generate 100Hz sample frequency-------
@@ -57,72 +60,82 @@ void Active_InterruptSample() {
   sei(); //allow interrupts
 }
 
-
 //the interrupt has to be as small as possible
 //and we have to ensure that the loop control has to have less than 10 ms
 ISR(TIMER1_COMPA_vect) {
-  flag_timer = true; //notify main loop
+  if ( ( i2c.deskStatus == CONSENSUS ) || ( i2c.deskStatus == GENERAL ) )
+  {
+    cont.general();
+    flag_timer = true; //notify main loop
+  }
 }
-
 
 void setup() {
   Serial.begin(2000000);
 
-  my_adr = EEPROM.read(0);
+  pinMode(i2c.switch_pin, INPUT);
+  digitalWrite(i2c.switch_pin, HIGH);
 
-  Serial.print("my_adr: ");
-  Serial.println(my_adr);
+  myAddr = EEPROM.read(0);
 
-  Wire.begin(my_adr); // receive data
+  myAddr = i2c.checkAddress( myAddr, k, n1, cont );
 
-  for (int i = 0; i < 2; i++)
-    k[i] = -1;
+  Serial.print("myAddr: ");
+  Serial.println(myAddr);
 
-  my_adr = i2c.checkAdress(my_adr, k);
+  Wire.begin(myAddr); // receive data
 
   Wire.onReceive(receiveEvent); //event handler
 
   //active broadcast
-  TWAR = (my_adr << 1) | 1;
+  TWAR = (myAddr << 1) | 1;
 
-  i2c.findAllNodes(k, n1);
+  i2c.findAllNodes(k, n1, cont);
 
   Serial.print("k[0]: ");
   Serial.println(k[0]);
   Serial.print("k[1]: ");
   Serial.println(k[1]);
 
+  n1.d[myAddr] = -1;
 
   TCCR2B = (TCCR2B & mask) | prescale_pwm;
   Active_InterruptSample();
+
+  Serial.println("--------------- ACABOU O SETUP ---------------");
 }
 
 
 void loop() {
 
-  i2c.check_flags(k, n1);
+  //i2c.check_switch(k, n1, cont);
+
+  i2c.check_flags(k, n1, cont);
 
   if ( ( i2c.deskStatus == CONSENSUS ) && ( i2c.nr_nos > 1 ) )
   {
     //acrescentar condiçao de saida com d - d_av
-    if ( iterations < 50 )
+    if ( iterations < 50 && ( n1.d[0] != n1.d_av[0] || n1.d[1] != n1.d_av[1] ) )
     {
       n1.Primal_solve(k);
 
       Wire.beginTransmission(0x00);
       Wire.write('k');
-      Wire.write((uint8_t) my_adr);
+      Wire.write((uint8_t) myAddr);
       for (int j = 0; j < i2c.nr_nos; j++)
       {
         Wire.write((uint8_t)round(n1.d[j]));
       }
       Wire.endTransmission();
 
-      Serial.println("VOU ENTRAR NO WAITING???");
-      if (i2c.waitingAck(k, n1))
+      if (i2c.waitingAck(k, n1, cont))
       {
-        n1.d[0] = round(n1.d[0]);
-        n1.d[1] = round(n1.d[1]);
+        float aux = k * n1.d;
+        //compute my Lux to update controller:
+        myLux = aux + cont.ext_ilum;
+
+        for (int j = 0; j < i2c.nr_nos; j++)
+          n1.d[j] = round(n1.d[j]);
 
         Serial.print("n1.d[0]: ");
         Serial.println(n1.d[0]);
@@ -153,7 +166,7 @@ void loop() {
         Serial.print("n1.y[1]: ");
         Serial.println(n1.y[1]);
 
-        Serial.print("iterations: ");
+        Serial.print("ITERATIONS: ");
         Serial.println(iterations);
 
         iterations ++;
@@ -168,16 +181,87 @@ void loop() {
     {
       Serial.println("DEVIA VIR AQUI 1X");
 
-      i2c.deskStatus = 0;
+      cont.pwm_ref = n1.d[myAddr] * 2.55;
+
+      Serial.print("myLux: ");
+      Serial.println(myLux);
+
+      cont.simulator_init(myLux);
+
+      if (cont.desired_lux == UNOCCUPIED)
+        i2c.send_RPI_button( 254, myLux );
+      else
+        i2c.send_RPI_button( 255, myLux );
+
+      n1.d[myAddr] = -1;
+      i2c.deskStatus = GENERAL;
       iterations = 0;
     }
   }
 
-  if(flag_timer)
+  if (flag_timer)
   {
+    cont.print_actual_state(myLux);
+    i2c.send_RPI_sample(cont);
+
+    //Update controller variables
+    cont.old_i = cont.i;
+    cont.old_error = cont.error;
+
     flag_timer = false;
   }
+
+
+
+
+
+/*
+  if (millis() - startTime > 10000)
+  {
+    startTime = millis();
+    cont.vi = cont.y;
+    if (cont.desired_lux == OCCUPIED)
+    {
+      cont.desired_lux = UNOCCUPIED;
+      if (cont.vi > cont.vf) //to avoid flickering due to simulator function
+        cont.vi = cont.vf;
+    }
+    else
+    {
+      cont.desired_lux = OCCUPIED;
+      if (cont.vi < cont.vf) //to avoid flickering due to simulator function
+        cont.vi = cont.vf;
+    }
+
+    Serial.println("!!!!!!!!!! MUDOU O BOTAO !!!!!!!!!!");
+
+    if (i2c.nr_nos > 1)
+    {
+      if (cont.desired_lux > i2c.maxLux)
+        n1.L = i2c.maxLux;
+      else
+        n1.L = cont.desired_lux;
+
+      n1.consensus_init(i2c.nr_nos);
+
+      i2c.write_i2c((uint8_t) 0x00, 'd');
+      i2c.deskStatus = CONSENSUS;
+    }
+    else
+    {
+      cont.environment_init(cont.desired_lux, k[myAddr]);
+      i2c.deskStatus = GENERAL;
+
+      if (cont.desired_lux == UNOCCUPIED)
+        i2c.send_RPI_button( 254, cont.desired_lux );
+      else
+        i2c.send_RPI_button( 255, cont.desired_lux );
+    }
+  }
+  */
 }
+
+
 
 void receiveEvent(int howMany) {
   char action;
@@ -206,5 +290,5 @@ void receiveEvent(int howMany) {
   Serial.print("n1.aux_soma[1]: ");
   Serial.println(n1.aux_soma[1]);
 
-  i2c.performAction(action, source_adr, k, n1);
+  i2c.performAction(action, source_adr, k, n1, cont);
 }

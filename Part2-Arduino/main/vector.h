@@ -107,21 +107,16 @@ class Vector {
       return sum;
     }
 
-    void floatToUint(Vector <float>& a)
+    float norm( )
     {
-      for (int i = 0; i < a.sz; i++)
-        this->elem[i] = (uint8_t)a.elem[i];
+      int i;
+      float sum = 0;
+
+      for (i = 0; i < sz; i++)
+        sum = sum + pow(elem[i], 2);
+
+      return pow(sum, 0.5);
     }
-
-
-    void UintToFloat(Vector <uint8_t>& a)
-    {
-      for (int i = 0; i < a.sz; i++)
-        this->elem[i] = (float)a.elem[i];
-    }
-
-
-
 };
 
 #endif //VECTOR_H

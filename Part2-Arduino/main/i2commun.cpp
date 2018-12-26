@@ -2,86 +2,171 @@
 
 using namespace std;
 
-I2COMMUN::I2COMMUN() {
-  my_adr = 0;
-  pin_led = 0;
+I2COMMUN::I2COMMUN()
+  : myAddr(0), last_node(0), first_node(0), destination(-1),
+    nr_nos(0), deskStatus(0), counterAck(0), maxLux(0),
+    prev_switch_value(HIGH), switch_debounce(200), prev_switch_time(0)
+{
 
-  last_node = 0;
-  first_node = 0;
-
-  destination = 0;
-
-  nr_nos = 0;
-  deskStatus = 0;
-
-  ext_ilum = 0;
-  lux_max = 0;
-
-  counterAck = 0;
-
-  //isto é para tirar daqui
-  m = 0;
-  b = 0;
-  //R1 em KOhm
-  R1 = 0;
 }
 
-I2COMMUN::I2COMMUN( int _pin_led ) {
-  my_adr = 0;
-  pin_led = _pin_led;
+//check occupation state through a button switch
+void I2COMMUN::check_switch( Vector <float>& _k, Node& _n1, CONTROLLER& _cont ) {
+  switch_value = digitalRead(switch_pin);
 
-  last_node = 0;
-  first_node = 0;
+  if (switch_value == HIGH && prev_switch_value == LOW && (switch_debounce + prev_switch_time) < millis()) {
+    prev_switch_time = millis();
 
-  destination = -1;
+    _cont.vi = _cont.y;
+    if (_cont.desired_lux == OCCUPIED)
+    {
+      _cont.desired_lux = UNOCCUPIED;
+      if (_cont.vi > _cont.vf) //to avoid flickering due to simulator function
+        _cont.vi = _cont.vf;
+    }
+    else
+    {
+      _cont.desired_lux = OCCUPIED;
+      if (_cont.vi < _cont.vf) //to avoid flickering due to simulator function
+        _cont.vi = _cont.vf;
+    }
 
-  nr_nos = 0;
-  deskStatus = 0;
+    Serial.println("!!!!!!!!!! MUDOU O BOTAO !!!!!!!!!!");
 
-  ext_ilum = 0;
-  lux_max = 0;
+    if (nr_nos > 1)
+    {
+      if (_cont.desired_lux > maxLux)
+        _n1.L = maxLux;
+      else
+        _n1.L = _cont.desired_lux;
 
-  counterAck = 0;
+      _n1.consensus_init(nr_nos);
 
-  //isto é para tirar daqui
-  m = -0.7;
-  b = 1.9252;
-  //R1 em KOhm
-  R1 = 10;
+      write_i2c((uint8_t) 0x00, 'd');
+      deskStatus = CONSENSUS;
+    }
+    else
+    {
+      _cont.environment_init(_cont.desired_lux, _k[myAddr]);
+      deskStatus = GENERAL;
+    }
+  }
+
+  prev_switch_value = switch_value;
 }
 
-float I2COMMUN::convert_ADC_to_Lux(float Vi_value)  {
-  float R2_1LUX = pow(10, b);
-  float V_volt = Vi_value * VCC / 1023.0;
-  float R2 = ( (VCC / V_volt) - 1 ) * R1;
 
-  return pow( R2 / R2_1LUX, 1 / m);
+
+
+void I2COMMUN::checkStatus(Vector <float>& _k, Node& _n1, CONTROLLER& _cont) {
+  char inputChar;
+  String flag = "";
+
+  //read desired iluminance from the serial
+  while (Serial.available() > 0) {
+    inputChar = Serial.read();
+
+    if (inputChar != '\n')
+      flag += inputChar;
+    else
+      Serial.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+      //changeStatus(flag, _k, _n1, _cont);
+  }
 }
 
-int I2COMMUN::checkAdress( int _my_adr, Vector <float>& _k ) {
+//update desired flags states
+void I2COMMUN::changeStatus(String flag, Vector <float>& _k, Node& _n1, CONTROLLER& _cont) {
+  char *aux_str = flag.c_str();
+  char str[50];
+
+  sscanf(aux_str, "%s", str);
+
+  if (!strcmp(str, "x")) {
+
+    /*
+
+      _cont.vi = _cont.y;
+      if (_cont.desired_lux == OCCUPIED)
+      {
+      _cont.desired_lux = UNOCCUPIED;
+      if (_cont.vi > _cont.vf) //to avoid flickering due to simulator function
+        _cont.vi = _cont.vf;
+      }
+      else
+      {
+      _cont.desired_lux = OCCUPIED;
+      if (_cont.vi < _cont.vf) //to avoid flickering due to simulator function
+        _cont.vi = _cont.vf;
+      }
+
+      Serial.println("!!!!!!!!!! MUDOU O BOTAO !!!!!!!!!!");
+
+      if (nr_nos > 1)
+      {
+      if (_cont.desired_lux > maxLux)
+        _n1.L = maxLux;
+      else
+        _n1.L = _cont.desired_lux;
+
+      _n1.consensus_init(nr_nos);
+
+      write_i2c((uint8_t) 0x00, 'd');
+      deskStatus = CONSENSUS;
+      }
+      else
+      {
+      _cont.environment_init(_cont.desired_lux, _k[myAddr]);
+      deskStatus = GENERAL;
+
+      if(_cont.desired_lux == UNOCCUPIED)
+        send_RPI_button( 254, _cont.desired_lux );
+      else
+        send_RPI_button( 255, _cont.desired_lux );
+      }
+    */
+    Serial.println("--------------É UM XXXXXXXXXXXXXXXXXXXXXXXX--------------------");
+  }
+
+  memset(str, 0, 20);
+}
+
+int I2COMMUN::checkAddress( int _myAddr, Vector <float>& _k, Node& _n1, CONTROLLER& _cont ) {
+
+  for (int i = 0; i < 2; i++)
+    _k[i] = -1;
 
   //esta so assim pq ainda se vai meter aqui a resolução de conflitos caso já exista este endereço
-  my_adr = _my_adr;
-  _k[my_adr] = 0;
+  myAddr = _myAddr;
+  _k[myAddr] = 0;
 
-  return my_adr;
+  _n1.index = myAddr;
+
+  _cont.m = -0.7;
+
+  if (myAddr == 1)
+    _cont.b = 2.2472;
+  else
+    _cont.b = 1.9252;
+
+  return myAddr;
 }
 
 void I2COMMUN::write_i2c(uint8_t dest_address, char action) {
   Wire.beginTransmission(dest_address);
   Wire.write(action);
-  Wire.write((uint8_t) my_adr);
+  Wire.write((uint8_t) myAddr);
   Wire.endTransmission();
 }
 
-void I2COMMUN::findAllNodes(Vector <float>& _k, Node& _n1) {
+void I2COMMUN::findAllNodes(Vector <float>& _k, Node& _n1, CONTROLLER& _cont ) {
+  Serial.println("--------------- FIND ALL NODES ---------------");
 
   nr_nos = 1;
 
-  first_node = my_adr;
-  last_node = my_adr;
+  first_node = myAddr;
+  last_node = myAddr;
 
-  write_i2c((byte) 0x00, 'h');
+  write_i2c((uint8_t) 0x00, 'h');
 
   unsigned long aux;
   aux = millis();
@@ -94,46 +179,46 @@ void I2COMMUN::findAllNodes(Vector <float>& _k, Node& _n1) {
   Serial.print("nr_nos: ");
   Serial.println(nr_nos);
 
-  check_flags(_k, _n1);
+  check_flags(_k, _n1, _cont);
 
-  if (my_adr != first_node)
+  if (myAddr != first_node)
   {
     write_i2c((uint8_t) first_node, 'x');
     Serial.println("enviei um x");
   }
 
-  if ( nr_nos == 1 || ( (nr_nos > 1) && (my_adr == first_node) ) )
+  if ( nr_nos == 1 || ( (nr_nos > 1) && (myAddr == first_node) ) )
   {
     deskStatus = START_CALIBRATION;
-    Serial.println("vou começar a calibrar");
   }
 }
 
-void I2COMMUN::readOwnPerturbation( Node& _n1 ) {
+void I2COMMUN::readOwnPerturbation( Node& _n1, CONTROLLER& _cont ) {
 
-  ext_ilum = analogRead(A0);
-  ext_ilum = convert_ADC_to_Lux(ext_ilum);
+  _cont.ext_ilum = analogRead(A0);
+  _cont.vi = _cont.ext_ilum * VCC / (1023.0);
+  _cont.ext_ilum = _cont.convert_ADC_to_Lux(_cont.ext_ilum);
 
-  _n1.o = ext_ilum;
+  _n1.o = _cont.ext_ilum;
 
-  Serial.print("ext_ilum: ");
-  Serial.println(ext_ilum);
+  Serial.print("_cont.ext_ilum: ");
+  Serial.println(_cont.ext_ilum);
 
   write_i2c((uint8_t) destination, 'k');
 }
 
-void I2COMMUN::getK( Vector <float>& _k ) {
+void I2COMMUN::getK( Vector <float>& _k, CONTROLLER& _cont ) {
   float aux;
 
   //meter um if k[k_nr]!=-1 e !=0 ??
   //btw com isto tamos smp a recalcular todas as entradas
   aux = analogRead(A0);
-  aux = convert_ADC_to_Lux(aux);
+  aux = _cont.convert_ADC_to_Lux(aux);
 
   Serial.print("aux: ");
   Serial.println(aux);
 
-  _k[destination] = (aux - ext_ilum) / 255;
+  _k[destination] = (aux - _cont.ext_ilum) / 255;
 
   Serial.print("destination: ");
   Serial.println(destination);
@@ -146,10 +231,10 @@ void I2COMMUN::getK( Vector <float>& _k ) {
 
 int I2COMMUN::getNextOne( Vector <float>& _k ) {
 
-  if (my_adr == last_node )
+  if (myAddr == last_node )
     return -1;
 
-  int _cur = my_adr + 1;
+  int _cur = myAddr + 1;
 
   while (1)
   {
@@ -161,11 +246,8 @@ int I2COMMUN::getNextOne( Vector <float>& _k ) {
   return -1 ;
 }
 
-int I2COMMUN::waitingAck(Vector <float>& _k, Node& _n1) {
+int I2COMMUN::waitingAck( Vector <float>& _k, Node& _n1, CONTROLLER& _cont ) {
   unsigned long startTime = millis();
-
-  Serial.print("startTime: ");
-  Serial.println(startTime);
 
   while (1) {
     delayMicroseconds(10);
@@ -182,8 +264,8 @@ int I2COMMUN::waitingAck(Vector <float>& _k, Node& _n1) {
       deskStatus = 0;
       for (int i = 0; i < nr_nos; i++)
         _k[i] = -1;
-      my_adr = checkAdress(my_adr, _k);
-      findAllNodes(_k, _n1);
+      myAddr = checkAddress( myAddr, _k, _n1, _cont );
+      findAllNodes(_k, _n1, _cont);
 
       return 0;
     }
@@ -193,29 +275,29 @@ int I2COMMUN::waitingAck(Vector <float>& _k, Node& _n1) {
 }
 
 
-void I2COMMUN::recalibration( Vector <float>& _k, Node& _n1 ) {
+void I2COMMUN::recalibration( Vector <float>& _k, Node& _n1, CONTROLLER& _cont ) {
   int next_node;
 
   analogWrite(pin_led, 255);
   delay(200);
 
   //mandar broadcast para todos lerem com a minha luminosidade maxima
-  write_i2c((byte) 0x00, (byte) 'm');
+  write_i2c((uint8_t) 0x00, 'm');
 
-  lux_max = analogRead(A0);
-  lux_max = convert_ADC_to_Lux(lux_max);
+  _cont.lux_max = analogRead(A0);
+  _cont.lux_max = _cont.convert_ADC_to_Lux(_cont.lux_max);
 
-  Serial.print("lux_max: ");
-  Serial.println(lux_max);
+  Serial.print("_cont.lux_max: ");
+  Serial.println(_cont.lux_max);
 
-  _k[my_adr] = (lux_max - ext_ilum) / 255;
+  _k[myAddr] = (_cont.lux_max - _cont.ext_ilum) / 255;
   //ver o meu k e o k dos outros;
   //meter o codigo aqui
 
-  Serial.print("_k[my_adr]: ");
-  Serial.println(_k[my_adr]);
+  Serial.print("_k[myAddr]: ");
+  Serial.println(_k[myAddr]);
 
-  if (!waitingAck(_k, _n1))
+  if (!waitingAck(_k, _n1, _cont))
     return;
 
   next_node = getNextOne(_k);
@@ -232,29 +314,48 @@ void I2COMMUN::recalibration( Vector <float>& _k, Node& _n1 ) {
   }
   else
   {
-    Serial.println("acabou a calibração");
+    Serial.println("--------------- ACABOU A CALIBRACAO ---------------");
 
     if ( nr_nos > 1 )
     {
-      //enviar uma flag para começar o consensus
-      write_i2c((uint8_t) 0x00, 'c');
-      deskStatus = CONSENSUS;
+      maxLux = 0;
 
       for (int i = 0; i < nr_nos; i++)
         _k[i] = _k[i] * 2.55;
 
       _n1.n = _k.quad_norm();
       _n1.m = _n1.n - pow( _k[_n1.index], 2 );
+
+      // to don't allow more lux than it is possible
+      for (int i = 0; i < nr_nos; i++)
+        maxLux = maxLux + _k[i] * 100;
+
+      maxLux = maxLux + _n1.o;
+
+      Serial.print("max Lux: ");
+      Serial.println(maxLux);
+
+      if (_cont.desired_lux > maxLux)
+        _n1.L = maxLux;
+      else
+        _n1.L = _cont.desired_lux;
+
+      //enviar uma flag para começar o consensus
+      write_i2c((uint8_t) 0x00, 'c');
+      deskStatus = CONSENSUS;
     }
-    else {
-      deskStatus = 0;
+    else
+    {
+      _cont.environment_init(_cont.desired_lux, _k[myAddr]);
+      deskStatus = GENERAL;
     }
+
   }
+
+  send_RPI_calibration(_cont);
 }
 
-void I2COMMUN::start_calibration(Vector <float>& _k, Node& _n1 ) {
-
-  Serial.println("START CALIBRATION!! LA LA LA LA");
+void I2COMMUN::start_calibration(Vector <float>& _k, Node& _n1, CONTROLLER& _cont ) {
 
   analogWrite(pin_led, 0);
 
@@ -263,7 +364,7 @@ void I2COMMUN::start_calibration(Vector <float>& _k, Node& _n1 ) {
 
   //verificar que todos desligaram o led (ver o que fazer caso nao desliguem)
   //manda para todos a informaçao de que podem ler a perturb. externa!
-  if (!waitingAck(_k, _n1))
+  if (!waitingAck(_k, _n1, _cont))
     return;
 
   delay(200);
@@ -271,17 +372,20 @@ void I2COMMUN::start_calibration(Vector <float>& _k, Node& _n1 ) {
   write_i2c((uint8_t) 0x00, 'l');
 
   //para o caso do first node, este lê já aqui o seu
-  ext_ilum = analogRead(A0);
-  ext_ilum = convert_ADC_to_Lux(ext_ilum);
+  _cont.ext_ilum = analogRead(A0);
+  _cont.vi = _cont.ext_ilum * VCC / (1023.0);
+  Serial.print("_cont.vi: ");
+  Serial.println(_cont.vi);
+  _cont.ext_ilum = _cont.convert_ADC_to_Lux(_cont.ext_ilum);
 
-  _n1.o = ext_ilum;
+  _n1.o = _cont.ext_ilum;
 
-  Serial.print("ext_ilum: ");
-  Serial.println(ext_ilum);
+  Serial.print("_cont.ext_ilum: ");
+  Serial.println(_cont.ext_ilum);
 
   //verificar que ja todos mediram a sua perturb externa
   //depois o 1º começa a acender, dps o 2º.. etc
-  if (!waitingAck(_k, _n1))
+  if (!waitingAck(_k, _n1, _cont))
     return;
 
   //pq ja estamos no node 1, entao ele vai começar a calibrar-se ja
@@ -291,7 +395,7 @@ void I2COMMUN::start_calibration(Vector <float>& _k, Node& _n1 ) {
   Serial.println(deskStatus);
 }
 
-void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
+void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1, CONTROLLER& _cont ) {
 
   switch (deskStatus) {
     case SEND_MY_ADDRESS:
@@ -302,7 +406,7 @@ void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
       break;
 
     case START_CALIBRATION:
-      start_calibration(_k, _n1);
+      start_calibration(_k, _n1, _cont);
       break;
 
     case LED_OFF:
@@ -313,18 +417,18 @@ void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
       break;
 
     case PERTURBATION:
-      readOwnPerturbation( _n1 );
+      readOwnPerturbation( _n1, _cont );
 
       deskStatus = 0;
       destination = -1;
       break;
 
     case RECALIB:
-      recalibration(_k, _n1);
+      recalibration( _k, _n1, _cont );
       break;
 
     case COMPUTE_K:
-      getK(_k);
+      getK( _k, _cont );
 
       deskStatus = 0;
       destination = -1;
@@ -332,7 +436,7 @@ void I2COMMUN::check_flags( Vector <float>& _k, Node& _n1 ) {
   }
 }
 
-void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k, Node& _n1 )
+void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k, Node& _n1, CONTROLLER& _cont )
 {
   switch (_action) {
 
@@ -419,11 +523,98 @@ void I2COMMUN::performAction( char _action, int _source_adr, Vector <float>& _k,
       break;
 
     case 'c':
-      deskStatus = CONSENSUS;
+      maxLux = 0;
+
       for (int i = 0; i < nr_nos; i++)
         _k[i] = _k[i] * 2.55;
+
       _n1.n = _k.quad_norm();
       _n1.m = _n1.n - pow( _k[_n1.index], 2 );
+
+      // to don't allow more lux than it is possible
+      for (int i = 0; i < nr_nos; i++)
+        maxLux = maxLux + _k[i] * 100;
+
+      maxLux = maxLux + _n1.o;
+
+      Serial.print("max Lux: ");
+      Serial.println(maxLux);
+
+      if (_cont.desired_lux > maxLux)
+        _n1.L = maxLux;
+      else
+        _n1.L = _cont.desired_lux;
+
+      //enviar uma flag para começar o consensus
+      write_i2c((uint8_t) 0x00, 'c');
+      deskStatus = CONSENSUS;
+      break;
+
+    case 'd':
+      if (_cont.desired_lux > maxLux)
+        _n1.L = maxLux;
+      else
+        _n1.L = _cont.desired_lux;
+
+      _n1.consensus_init(nr_nos);
+
+      deskStatus = CONSENSUS;
       break;
   }
+}
+
+void I2COMMUN::send_RPI_button( int _button_status, float _myLux )
+{
+  double intMyLux, fracMyLux;
+
+  fracMyLux = modf ((double) _myLux , &intMyLux);
+
+  Wire.beginTransmission(0x48);
+  Wire.write((uint8_t) _button_status);
+  Wire.write((uint8_t) myAddr);
+  Wire.write((uint8_t) intMyLux);
+  Wire.write((uint8_t) (100 * fracMyLux));
+  uint8_t status_Escrita = Wire.endTransmission();
+
+  
+}
+
+
+void I2COMMUN::send_RPI_calibration( CONTROLLER& _cont )
+{
+  double intLBOff, fracLBOff, intLBOn, fracLBOn, intExtIlum, fracExtIlum;
+
+  fracLBOff = modf ((double) UNOCCUPIED , &intLBOff);
+  fracLBOn = modf ((double) OCCUPIED , &intLBOn);
+  fracExtIlum = modf ((double) _cont.ext_ilum , &intExtIlum);
+
+  Wire.beginTransmission(0x48);
+  Wire.write((uint8_t) (myAddr + 127));
+  Wire.write((uint8_t) intLBOff);
+  Wire.write((uint8_t) (100 * fracLBOff));
+  Wire.write((uint8_t) intLBOn);
+  Wire.write((uint8_t) (100 * fracLBOn));
+  Wire.write((uint8_t) intExtIlum);
+  Wire.write((uint8_t) (100 * fracExtIlum));
+  uint8_t status_Escrita = Wire.endTransmission();
+
+  //Serial.print("********************* Status:");
+  //Serial.println(status_Escrita);
+}
+
+void I2COMMUN::send_RPI_sample( CONTROLLER& _cont )
+{
+  double intLux, fracLux;
+
+  fracLux = modf ((double) _cont.convert_ADC_to_Lux( _cont.y * (1023.0 / 5) ) , &intLux);
+
+  Wire.beginTransmission(0x48);
+  Wire.write((uint8_t) myAddr);
+  Wire.write((uint8_t) intLux);
+  Wire.write((uint8_t) (100 * fracLux));
+  Wire.write((uint8_t) _cont.controller_output);
+  uint8_t status_Escrita = Wire.endTransmission();
+
+  //Serial.print("********************* Status:");
+  //Serial.println(status_Escrita);
 }
