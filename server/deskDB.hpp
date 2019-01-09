@@ -11,8 +11,8 @@
 #define POWER 1
 
 class deskDB{//ver o .clear dos circ buffers
-	boost::circular_buffer<float> lux; // measured lux values// SE DER MERDA A COMPILAR VER SE É PQ AQUI NAO TEM Q SER <float *>
-	boost::circular_buffer<float> duty_cycle; // imposed duty cycles// SE DER MERDA A COMPILAR VER SE É PQ AQUI NAO TEM Q SER <float *>
+	boost::circular_buffer<float> lux; // measured lux values
+	boost::circular_buffer<float> duty_cycle; // imposed duty cycles
 	unsigned int buff_size;
 	bool occupancy; // is? occupied
 	float lower_bound[2] = {0}; // minimal lux desired (0 - unoccupied, 1 - occupied)

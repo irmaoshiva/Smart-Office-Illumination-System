@@ -24,7 +24,7 @@ class luminaire{
 	std::mutex mtx;
 
 	int last_desk;
-	std::vector<std::shared_ptr<deskDB>> desksDB;// SE DER MERDA A COMPILAR VER SE É PQ AQUI NAO TEM Q SER <deskDB *>
+	std::vector<std::shared_ptr<deskDB>> desksDB;
 	//to notify streaming
 	std::vector<std::condition_variable> cv;
 	std::vector<std::mutex> stream_mtx;
@@ -32,6 +32,7 @@ class luminaire{
 public:
 	luminaire(int last_desk_, int samples_holder);
 	~luminaire();
+	//read from i2C functions
 	void make_read(int addr1);
 	void read_sample(int addr1, int desk);
 	void read_occupancy(int addr1, bool state);
@@ -63,6 +64,7 @@ public:
 	void clear_luminaire();
 
 private:
+	//pgpio related
 	int init_slave(bsc_xfer_t &xfer, int addr);
 	void close_slave(bsc_xfer_t &xfer);
 

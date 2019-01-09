@@ -1,5 +1,6 @@
 #include "luminaire.hpp"
 
+
 luminaire::luminaire(int last_desk_, int samples_holder)
     : last_desk(last_desk_), desksDB(last_desk + 1)
     , cv(last_desk + 1), stream_mtx(last_desk + 1)
@@ -44,7 +45,7 @@ void luminaire::close_slave(bsc_xfer_t &xfer){
     bscXfer(&xfer);
 }
 
-void luminaire::make_read(int addr1){//printf("leu %d, %d, %d, %d\n", xfer.rxBuf[0], xfer.rxBuf[1], xfer.rxBuf[2], xfer.rxBuf[3]);
+void luminaire::make_read(int addr1){
     int desk = (int) xfer.rxBuf[addr1];
     if (desk < 127)
         read_sample(addr1, desk);
@@ -70,7 +71,7 @@ void luminaire::read_sample(int addr1, int desk){
 void luminaire::read_occupancy(int addr1, bool state){
     if (xfer.rxCnt < addr1 + 3)
         return;
-    //std::cout << "o estado é " << state << "a desk é " << desk << std::endl;
+
     int desk = (int) xfer.rxBuf[addr1 + 1];
     float control_ref = (int) xfer.rxBuf[addr1 + 2] + 0.01 * (int) xfer.rxBuf[addr1 + 3];
 
@@ -96,7 +97,7 @@ void luminaire::read_reaclib(int addr1, int desk){
 
 void luminaire::read_data(bool& server_up){
     while (server_up){
-       // usleep(500);
+       // usleep(500);// not to "burn" the core unnecessarily
         mtx.lock();
 
             xfer.txCnt = 0;
@@ -105,10 +106,6 @@ void luminaire::read_data(bool& server_up){
                 std::cout << "\nbscXfer() returned negative status.\n";
                 break;
             }
-            /*for(int i = 0; i < xfer.rxCnt; i++)
-                /printf("%d ", (int) xfer.rxBuf[i]);
-            if (xfer.rxCnt > 0)
-                printf("\n");*/
 
             if (xfer.rxCnt > 0)
                 make_read(0);

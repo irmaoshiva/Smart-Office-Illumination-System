@@ -2,7 +2,7 @@
 #define TCP_SERVER
 
 #include "luminaire.hpp"
-#include <atomic>//POR NO LUMINAIRE/DB SE FOR PRECISO
+#include <atomic>
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
@@ -31,8 +31,6 @@ private:
 	int get_desk();
 	void interpret_request();
 	void send_reply(std::string& response);
-	//void begin_stream(int desk, char type, std::function<float(int)> get_value);
-	//void send_stream(int desk, char type, std::atomic<bool> &stream_up, std::function<float(int)> get_value);
 	void begin_stream(int desk, char type, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int));
 	void send_stream(int desk, char type, std::vector<bool>& stream_up, std::chrono::time_point<std::chrono::system_clock> start, float (luminaire::*get_value)(int));
 };

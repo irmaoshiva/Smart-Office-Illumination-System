@@ -109,7 +109,7 @@ void session::interpret_request(){
 	std::string invalid = "invalid request";
 	if (data[0] == 'r' && data[1] == '\n'){
 		//restartsystem...------......
-		std::string s_ = "system restarted";
+		std::string s_ = "System restart not implemented :c";
 		send_reply(s_);
 		return;
 	}
@@ -291,9 +291,7 @@ void session::interpret_request(){
 				case 'l':{
 					if (! lstream_up[desk]){
 						lstream_up[desk] = true;
-						//auto get_lux = std::bind(luminaire::get_lux, office, _1);
 						begin_stream(desk, data[2], start, &luminaire::get_lux);
-						//auto get_lux_on_change = std::bind(luminaire::get_lux_on_change, office, _1);
 						send_stream(desk, data[2], lstream_up, start, &luminaire::get_lux_on_change);
 					}else{
 						lstream_up[desk] = false;
@@ -305,9 +303,7 @@ void session::interpret_request(){
 				case 'd':{
 					if (! dstream_up[desk]){
 						dstream_up[desk] = true;
-						//auto get_duty_cycle = std::bind(luminaire::get_duty_cycle, office, _1);
 						begin_stream(desk, data[2], start, &luminaire::get_duty_cycle);
-						//auto get_duty_cycle_on_change = std::bind(luminaire::get_duty_cycle_on_change, office, _1);
 						send_stream(desk, data[2], dstream_up, start, &luminaire::get_duty_cycle_on_change);
 					}else{
 						dstream_up[desk] = false;
