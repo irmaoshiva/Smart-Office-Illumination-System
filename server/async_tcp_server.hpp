@@ -17,8 +17,8 @@ class session : public std::enable_shared_from_this<session> {
 	char data[max_len];
 	int linked = 0; //is? connected
 
-	std::vector<bool> lstream_up;
-	std::vector<bool> dstream_up;
+	std::vector<bool> lstream_up; //lux stream state
+	std::vector<bool> dstream_up; //duty cycle stream state
 	
 public:
 	session(ip::tcp::socket s_);
