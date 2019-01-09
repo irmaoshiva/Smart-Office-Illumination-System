@@ -13,7 +13,7 @@
 class deskDB{
 	boost::circular_buffer<float> lux; // measured lux values
 	boost::circular_buffer<float> duty_cycle; // imposed duty cycles
-	unsigned int buff_size;
+	unsigned int buff_size; // lux and duty cycles memory
 	bool occupancy; // is? occupied
 	float lower_bound[2] = {0}; // minimal lux desired (0 - unoccupied, 1 - occupied)
 	float ext_lux = 0; // external lux affecting the desk
