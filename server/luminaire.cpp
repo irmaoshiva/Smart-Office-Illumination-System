@@ -161,7 +161,7 @@ float luminaire::get_lux_on_change(int desk){
         return -1;
     
     std::unique_lock<std::mutex> lock(stream_mtx[desk]);
-    if (cv[desk].wait_for(lock, std::chrono::milliseconds(30)), []{return ret_cvwait == 1;})
+    if (cv[desk].wait_for(lock, std::chrono::milliseconds(CONV_VAR_TIMEOUT)), []{return ret_cvwait == 1;})
         return desksDB[desk]->get_lux();
     else //timed out
         return -1;
@@ -179,7 +179,7 @@ float luminaire::get_duty_cycle_on_change(int desk){
         return -1;
     
     std::unique_lock<std::mutex> lock(stream_mtx[desk]);
-    if (cv[desk].wait_for(lock, std::chrono::milliseconds(30)), []{return ret_cvwait == 1;})
+    if (cv[desk].wait_for(lock, std::chrono::milliseconds(CONV_VAR_TIMEOUT)), []{return ret_cvwait == 1;})
         return desksDB[desk]->get_duty_cycle();
     else //timed out
         return -1;

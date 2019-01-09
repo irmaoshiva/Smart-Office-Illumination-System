@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
+#define CONV_VAR_TIMEOUT 30
 #define SLAVE_ADDR_DEFAULT 0x48
 
 
