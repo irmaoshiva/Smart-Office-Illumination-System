@@ -10,7 +10,7 @@
 
 #define POWER 1
 
-class deskDB{//ver o .clear dos circ buffers
+class deskDB{
 	boost::circular_buffer<float> lux; // measured lux values
 	boost::circular_buffer<float> duty_cycle; // imposed duty cycles
 	unsigned int buff_size;
