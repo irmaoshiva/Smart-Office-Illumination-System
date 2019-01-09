@@ -60,6 +60,7 @@ public:
 	void set_occupancy(int desk, bool state, float control_ref);
 	void set_parameters(int desk, float lower_bound_off, float lower_bound_on, float ext_lux);
 	void clear_desk(int desk);
+	void clear_luminaire();
 
 private:
 	int init_slave(bsc_xfer_t &xfer, int addr);

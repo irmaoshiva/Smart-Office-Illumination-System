@@ -2,11 +2,12 @@
 #include <csignal>
 
 #include "async_tcp_server.hpp"
-#define DEFAULT_PORT 17000
 #include "luminaire.hpp"
+#define DEFAULT_PORT 17000
+
 
 bool server_up = true;
-luminaire office(LAST_DESK, SAMPLING_RATE*TIME_HOLDING);
+luminaire office (LAST_DESK, SAMPLING_RATE*TIME_HOLDING);
 
 //Ctrl^C signal handler
 void terminate(int signalnum){
@@ -33,7 +34,7 @@ void read_console(){
 			office.stop_read();
 			continue;
 		}else if (action == "restart"){
-			//wipe all data read from the luminaire
+			office.clear_luminaire();
 			continue;
 		}else if (action == "changeAddr"){
 			std::cout << "\n Insert new address: ";
@@ -48,9 +49,9 @@ void read_console(){
 			continue;
 		}else if (action == "help"){
 			std::cout << "\nDetailed actions functionalities:\n"
-							<< "start - starts reading and storing data from the luminaire;\n"
+							<< "start - starts reading and storing data from the office;\n"
 							<< "stop - stops reading data from the luminaire and ditches acquired data;\n"
-							<< "restart - ditches all acquired data from the luminaire;\n"
+							<< "restart - ditches all acquired data from the office;\n"
 							<< "changeAddr - change raspberrypi reading address;\n"
 							<< "exit - shutdown the program.\n\n";
 		}else if (action == "exit" || ! server_up){
@@ -71,7 +72,7 @@ int main(int argc, char* argv[]) {
 
 	int port = DEFAULT_PORT;
 	if (argc > 2){
-		std::cerr << "Usage: server <port> \n"; 
+		std::cerr << "Usage: ./server <port> \n"; 
 		return 1;
 	}else if (argc == 2)
 		port = std::atoi(argv[1]);

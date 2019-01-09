@@ -44,7 +44,7 @@ void luminaire::close_slave(bsc_xfer_t &xfer){
     bscXfer(&xfer);
 }
 
-void luminaire::make_read(int addr1){
+void luminaire::make_read(int addr1){//printf("leu %d, %d, %d, %d\n", xfer.rxBuf[0], xfer.rxBuf[1], xfer.rxBuf[2], xfer.rxBuf[3]);
     int desk = (int) xfer.rxBuf[addr1];
     if (desk < 127)
         read_sample(addr1, desk);
@@ -70,7 +70,7 @@ void luminaire::read_sample(int addr1, int desk){
 void luminaire::read_occupancy(int addr1, bool state){
     if (xfer.rxCnt < addr1 + 3)
         return;
-
+    //std::cout << "o estado é " << state << "a desk é " << desk << std::endl;
     int desk = (int) xfer.rxBuf[addr1 + 1];
     float control_ref = (int) xfer.rxBuf[addr1 + 2] + 0.01 * (int) xfer.rxBuf[addr1 + 3];
 
@@ -292,4 +292,9 @@ void luminaire::clear_desk(int desk){
         return;
 
     desksDB[desk]->clearDB();
+}
+
+void luminaire::clear_luminaire(){
+    for(int i = 0; i <= last_desk; i ++)
+        desksDB[i]->clearDB();
 }
