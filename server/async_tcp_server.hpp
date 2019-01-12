@@ -24,8 +24,8 @@ public:
 	session(ip::tcp::socket s_);
 	ip::tcp::socket& socket();
 	void start();
-	~session(){ if(linked) printf("\n\nA client left\n\n");
-				else 	   printf("\n\nA client failed to connect\n\n");};
+	~session(){ /*if(linked) printf("\n\nA client left\n\n");
+				else 	   printf("\n\nA client failed to connect\n\n");*/};
 
 private:
 	int get_desk();
